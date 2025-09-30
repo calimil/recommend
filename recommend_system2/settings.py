@@ -9,122 +9,180 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
+"""
+# Django项目配置文件 - recommend_system2
+# 功能：定义项目的核心配置（数据库、应用、静态文件、国际化等）
+# 生成环境：通过 'django-admin startproject' 命令创建，基于 Django 2.2.5 版本
+# 参考文档：
+# - 配置详解：https://docs.djangoproject.com/en/2.2/topics/settings/
+# - 配置参数全量说明：https://docs.djangoproject.com/en/2.2/ref/settings/
+"""
 
+# 导入os模块：用于处理操作系统相关的文件路径、环境变量等，Django依赖其构建项目路径
 import os
 
+# 项目路径配置：定义项目核心目录路径，方便后续引用（如模板、静态文件、数据库）
+# ------------------------------------------------------------------------------
+# BASE_DIR：项目根目录路径
+# 逻辑：通过os.path.abspath(__file__)获取当前settings.py文件的绝对路径，
+# 再通过两次os.path.dirname向上追溯，得到项目根目录（recommend_system2/）
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
+#  快速开发环境配置（注意：生产环境需修改以下配置，避免安全风险）
+# 参考：https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+# ------------------------------------------------------------------------------
+# SECURITY WARNING: 安全密钥（核心安全配置）
+# 作用：用于加密会话cookie、CSRF令牌、密码重置令牌等敏感数据
+# 注意：生产环境绝对不能硬编码！需通过环境变量（如os.environ.get('SECRET_KEY')）加载，防止泄露
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '#x4-omgwgbqheoo*0nm8q%k^_46(e^4kt7zbske2ue=!(k=2tv'
 
+# SECURITY WARNING: DEBUG模式（开发/生产环境切换关键）
+# 作用：
+# - 开发环境（DEBUG=True）：报错时显示详细堆栈信息，自动加载修改后的代码（无需重启服务）
+# - 生产环境（DEBUG=False）：报错时显示友好页面，关闭自动代码加载，避免暴露项目结构
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# 允许访问项目的主机列表（安全配置）
+# 作用：限制哪些域名/IP可以访问当前Django项目，防止主机头攻击
+# 配置说明：
+# - 开发环境：'*' 表示允许所有主机访问（方便局域网测试，如用户注释中提到的通过IP访问）
+# - 生产环境：需指定具体域名（如 ['www.yourdomain.com', 'yourdomain.com']），禁止用'*'
+# 用户提示：局域网访问时，可将此处改为电脑的IPv4地址（如 ['192.168.137.1']），通过该IP在局域网内访问
 # 修改此处可局域网访问，查看电脑ip，cmd输入ipconfig IPV4的地址就是你的IP：192.168.137.1
 ALLOWED_HOSTS = ['*']
 
-
+#  应用与中间件配置：定义项目启用的应用和中间件（Django的核心功能扩展）
+#  已安装的应用（INSTALLED_APPS）
+# 作用：告诉Django哪些应用需要加载（包括Django自带应用和自定义应用）
+# 分类说明：
+# - Django自带应用：提供基础功能（后台管理、用户认证、会话管理等）
+# - 自定义应用：项目业务相关功能
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'user',
-    'Test',
-    'school_info',
-    'recommend_profession',
-    'recommend_school',
+    'django.contrib.admin',          # Django自带的后台管理系统（用于快速管理数据）
+    'django.contrib.auth',           # Django自带的用户认证系统（处理用户注册、登录、权限）
+    'django.contrib.contenttypes',   # 内容类型框架（关联模型与权限，支持动态权限管理）
+    'django.contrib.sessions',       # 会话管理系统（处理用户会话，保持登录状态）
+    'django.contrib.messages',       # 消息框架（用于在页面显示提示信息，如登录成功、操作失败）
+    'django.contrib.staticfiles',    # 静态文件管理框架（加载CSS、JS、图片等静态资源）
+    # 自定义业务应用（根据项目功能划分）
+    'user',                          # 用户相关应用（处理用户信息、个人中心等业务）
+    'Test',                          # 测试/示例应用（可能用于功能调试或临时业务）
+    'school_info',                   # 学校信息应用（管理学校数据、学校详情展示等）
+    'recommend_profession',          # 专业推荐应用（核心业务：根据条件推荐专业）
+    'recommend_school',              # 学校推荐应用（核心业务：根据条件推荐学校）
 ]
 
+# 中间件（MIDDLEWARE）
+# 作用：请求/响应的"拦截器"，处理请求前、响应后的逻辑（如安全验证、会话维护、CSRF防护）
+# 执行顺序：按列表顺序依次执行（请求时从上到下，响应时从下到上）
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',  # 安全相关中间件（处理HTTPS、XSS防护等）
+    'django.contrib.sessions.middleware.SessionMiddleware',  # 会话中间件（创建/维护用户会话）
+    'django.middleware.common.CommonMiddleware',      # 通用中间件（处理URL重定向、设置Content-Type等）
+    'django.middleware.csrf.CsrfViewMiddleware',      # CSRF防护中间件（防止跨站请求伪造攻击）
+    'django.contrib.auth.middleware.AuthenticationMiddleware',  # 认证中间件（关联用户会话与认证状态）
+    'django.contrib.messages.middleware.MessageMiddleware',    # 消息中间件（处理用户提示消息）
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',  # 防点击劫持中间件（限制页面被嵌入iframe）
 ]
 
+# 主URL配置文件（ROOT_URLCONF）
+# 作用：指定项目的核心URL路由配置文件，所有请求先进入该文件匹配路由
 ROOT_URLCONF = 'recommend_system2.urls'
 
+# 模板配置（TEMPLATES）
+# 作用：定义Django模板的加载方式、存储路径、上下文处理器等（模板用于生成HTML页面）
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
-        'APP_DIRS': True,
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',  # 模板引擎：使用Django自带引擎
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # 自定义模板目录：项目根目录下的'templates'文件夹
+        'APP_DIRS': True,  # 是否允许在各应用内的'templates'文件夹中查找模板（方便应用内复用模板）
         'OPTIONS': {
+            # 模板上下文处理器：向所有模板自动注入变量（无需手动传参即可在模板中使用）
             'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.debug',  # 调试模式上下文（开发环境显示调试信息）
+                'django.template.context_processors.request',  # 请求上下文（模板中可使用request对象）
+                'django.contrib.auth.context_processors.auth',  # 认证上下文（模板中可使用user对象）
+                'django.contrib.messages.context_processors.messages',  # 消息上下文（模板中可使用messages对象）
             ],
         },
     },
 ]
 
+# WSGI应用入口（WSGI_APPLICATION）
+# 作用：指定项目的WSGI（Web Server Gateway Interface）应用路径，用于部署时与Web服务器（如Nginx、Apache）对接
 WSGI_APPLICATION = 'recommend_system2.wsgi.application'
 
-
+# 数据库配置（DATABASES）
+# 作用：定义项目使用的数据库类型、连接信息、存储路径等
+# 参考：https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    'default': {  # 默认数据库（Django支持多数据库配置，此处仅用默认库）
+        'ENGINE': 'django.db.backends.sqlite3',  # 数据库引擎：SQLite3（轻量级文件数据库，适合开发环境）
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),  # 数据库文件路径：项目根目录下的'db.sqlite3'文件
+        # 注意：生产环境建议使用MySQL/PostgreSQL等数据库，需修改ENGINE和连接参数（如HOST、USER、PASSWORD）
     }
 }
 
-
+# 密码验证配置（AUTH_PASSWORD_VALIDATORS）
+# 作用：定义用户密码的强度验证规则，确保密码安全
+# 参考：https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
+        # 验证规则1：密码与用户属性（如用户名、邮箱）相似度不高
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
+         # 验证规则2：密码长度不低于最小要求（默认8位，可通过OPTIONS调整）
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
+        # 验证规则3：密码不是常见弱密码（如123456、password）
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
+        # 验证规则4：密码不能全为数字（防止纯数字弱密码）
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
-
+# 国际化配置（Internationalization）
+# 作用：定义项目的语言、时区、国际化支持等（适配多语言、多时区需求）
+# 参考：https://docs.djangoproject.com/en/2.2/topics/i18n/
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-us'  # 项目默认语言：英语（如需中文，修改为 'zh-hans'）
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'UTC'  # 项目默认时区：世界协调时（UTC）（如需中国时区，修改为 'Asia/Shanghai'）
 
-USE_I18N = True
+USE_I18N = True  # 是否启用国际化支持（允许项目使用多语言）
 
-USE_L10N = True
+USE_L10N = True  # 是否启用本地化支持（允许按地区格式显示日期、数字等）
 
-USE_TZ = True
+USE_TZ = True  # 是否使用时区功能（True时，数据库存储的时间会自动转换为TIME_ZONE指定的时区）
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-
+# 静态文件配置（Static files）
+# 作用：定义静态文件（CSS、JavaScript、图片、字体等）的URL路径和存储目录
+# 参考：https://docs.djangoproject.com/en/2.2/howto/static-files/
 STATIC_URL = '/static/'
+# 静态文件目录列表（开发环境）：指定Django在哪些目录中查找静态文件
+# 此处配置了项目根目录下的'static'文件夹，用于存放全局静态文件（各应用也可单独创建'static'文件夹）
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
