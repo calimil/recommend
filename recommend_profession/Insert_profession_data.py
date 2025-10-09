@@ -5,6 +5,8 @@ from sklearn.preprocessing import MinMaxScaler
 
 if __name__ == '__main__':
     df = pd.read_csv('./major_data(6).csv', encoding='GBK')
+#     连接到上一级目录下的SQLite数据库文件
+#      创建游标对象用于执行SQL语句
     conn = sqlite3.connect("../db.sqlite3")
     cursor = conn.cursor()
     min_max = MinMaxScaler()
