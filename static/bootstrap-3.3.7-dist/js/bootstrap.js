@@ -25,56 +25,85 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+// 模块一：Transition（过渡动画支持）
+
+// + 确保函数被正确解析为表达式
+// $ 参数接收 jQuery 对象，避免全局依赖
 +function ($) {
-  'use strict';
+  'use strict';// 使用严格模式，提高代码质量，避免一些常见的JavaScript陷阱
 
   // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
   // ============================================================
 
+  // 1. transitionEnd() 函数
+  // 功能：检测浏览器支持的CSS过渡结束事件名称
   function transitionEnd() {
+    // 创建一个虚拟DOM元素用于检测样式支持
     var el = document.createElement('bootstrap');
 
+     // 不同浏览器对transitionend事件的不同命名
     var transEndEventNames = {
-      WebkitTransition : 'webkitTransitionEnd',
-      MozTransition    : 'transitionend',
-      OTransition      : 'oTransitionEnd otransitionend',
-      transition       : 'transitionend'
+      WebkitTransition : 'webkitTransitionEnd',     // Webkit内核浏览器（Chrome, Safari）
+      MozTransition    : 'transitionend',           // Firefox
+      OTransition      : 'oTransitionEnd otransitionend',// Opera
+      transition       : 'transitionend'            // 标准
     };
 
+    // 遍历所有浏览器前缀，检测哪个样式属性存在
     for (var name in transEndEventNames) {
+      // 检查该样式属性是否在浏览器中支持
       if (el.style[name] !== undefined) {
+        // 返回对应的事件名称
         return { end: transEndEventNames[name] }
       }
     }
 
-    return false // explicit for ie8 (  ._.)
+    return false // 明确返回false，表示IE8等不支持transition的浏览器
   }
 
   // http://blog.alexmaccaw.com/css-transitions
+  
+  // 2. emulateTransitionEnd() 方法
+  // 功能：模拟transition结束事件，确保在指定时间后触发
+  // 参数：duration - 过渡动画的持续时间（毫秒）
   $.fn.emulateTransitionEnd = function (duration) {
-    var called = false;
-    var $el = this;
-    $(this).one('bsTransitionEnd', function () { called = true });
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };
+    var called = false;     // 标记事件是否已被调用
+    var $el = this;         // 保存当前jQuery对象
+    
+    // 监听过渡结束事件
+    $(this).one('bsTransitionEnd', function () { called = true });      // 当事件触发时，标记为已调用
+    
+    // 超时回调函数：如果transitionend事件没有触发，则手动触发
+    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };     // 手动触发浏览器支持的transition结束事件
+    
+    //设置超时，确保过渡结束事件总会触发
     setTimeout(callback, duration);
-    return this
+
+    return this     // 返回this以支持链式调用
   };
 
+  // 3. 初始化代码 - 事件系统设置
+  // 文档加载完成后执行
   $(function () {
+    // 将transition检测结果保存到jQuery.support中
     $.support.transition = transitionEnd();
 
+    // 如果浏览器不支持CSS过渡，直接返回
     if (!$.support.transition) return;
 
+    // 定义自定义事件bsTransitionEnd，代理到实际的transitionend事件
     $.event.special.bsTransitionEnd = {
-      bindType: $.support.transition.end,
-      delegateType: $.support.transition.end,
+      bindType: $.support.transition.end,       // 绑定原生事件
+      delegateType: $.support.transition.end,   // 委托事件类型
       handle: function (e) {
+        // 确保事件目标匹配当前元素时才执行处理函数
         if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
       }
     }
   })
 
-}(jQuery);
+}(jQuery);    // 立即执行函数，传入jQuery参数
+// 模块一（32行开始）是Bootstrap框架中处理CSS动画过渡的核心组件，确保了在各种浏览器环境下动画事件的可靠触发。
 
 /* ========================================================================
  * Bootstrap: alert.js v3.3.7
@@ -83,7 +112,6 @@ if (typeof jQuery === 'undefined') {
  * Copyright 2011-2016 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
-
 
 +function ($) {
   'use strict';
