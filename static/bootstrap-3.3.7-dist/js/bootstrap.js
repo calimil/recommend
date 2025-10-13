@@ -113,88 +113,119 @@ if (typeof jQuery === 'undefined') {
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
+// 模块二：Alert（警告框）
 +function ($) {
-  'use strict';
+  'use strict';   // 严格模式
 
   // ALERT CLASS DEFINITION
   // ======================
 
-  var dismiss = '[data-dismiss="alert"]';
+  // 1. Alert构造函数
+  // 功能：初始化警告框的事件监听。
+  var dismiss = '[data-dismiss="alert"]';     // 定义关闭按钮的选择器 
   var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
+    // 在元素上绑定点击事件，点击关闭按钮时调用close方法
+    // 使用事件委托，处理动态添加的元素
+    $(el).on('click', dismiss, this.close)    
   };
 
-  Alert.VERSION = '3.3.7';
+  Alert.VERSION = '3.3.7';      // 组件版本号
+  Alert.TRANSITION_DURATION = 150;    // 过渡动画持续时间(毫秒)
 
-  Alert.TRANSITION_DURATION = 150;
-
+  // 2. 原型方法 - close（核心关闭逻辑）
   Alert.prototype.close = function (e) {
-    var $this    = $(this);
-    var selector = $this.attr('data-target');
+    var $this    = $(this);      // 当前点击的元素(关闭按钮)
+    var selector = $this.attr('data-target');     // 获取目标警告框的选择器
 
+    // 如果没有data-target属性，尝试从href获取
     if (!selector) {
-      selector = $this.attr('href');
+      selector = $this.attr('href');      // 获取href
       selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
+    }// 使用正则表达式去除IE7不兼容的部分
 
+    // 根据选择器找到要关闭的警告框父元素，如果是"#"则获取空jQuery对象
     var $parent = $(selector === '#' ? [] : selector);
 
-    if (e) e.preventDefault();
+    // （总结）选择器解析逻辑：
+    //      优先使用 data-target 属性
+    //      备用使用 href 属性（兼容旧版本）
+    //      正则表达式清理href中不必要的部分
 
+    if (e) e.preventDefault();      // 阻止默认行为（如链接跳转）
+
+    // 如果没找到指定父元素，查找最近的.alert元素
     if (!$parent.length) {
       $parent = $this.closest('.alert')
     }
 
-    $parent.trigger(e = $.Event('close.bs.alert'));
+    // 触发关闭前事件，允许阻止默认关闭行为
+    $parent.trigger(e = $.Event('close.bs.alert'));     //close.bs.alert - 关闭前触发，可取消
 
+    // 如果事件被阻止，停止执行
     if (e.isDefaultPrevented()) return;
 
+     // 移除'in'类，开始隐藏动画
     $parent.removeClass('in');
 
+    // 内部函数：完全移除元素
     function removeElement() {
-      // detach from parent, fire event then clean up data
-      $parent.detach().trigger('closed.bs.alert').remove()
+      // 从DOM分离，触发关闭后事件，清理数据
+      $parent.detach().trigger('closed.bs.alert').remove()      //closed.bs.alert - 关闭后触发
     }
 
+    // 判断是否支持过渡动画且元素有fade类
     $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one('bsTransitionEnd', removeElement)
-        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
-      removeElement()
+    // 支持过渡：等待过渡动画结束后移除元素  
+    $parent
+        .one('bsTransitionEnd', removeElement)      // 监听过渡结束
+        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :      // 设置超时保障
+      removeElement()     // 无动画直接移除
   };
-
+    //（总结）动画处理逻辑：
+    // 有动画：等待过渡动画完成后再移除元素
+    // 无动画：立即移除元素
+    // emulateTransitionEnd 确保即使动画异常也能执行移除
 
   // ALERT PLUGIN DEFINITION
   // =======================
 
+  // 3. jQuery插件定义（插件主函数）
+  //插件模式：支持链式调用和多个元素初始化
   function Plugin(option) {
+    // 遍历每个匹配的元素
     return this.each(function () {
-      var $this = $(this);
-      var data  = $this.data('bs.alert');
+      var $this = $(this);      // 当前元素
+      var data  = $this.data('bs.alert');     // 获取已存储的实例
 
+      // 如果没有初始化过，创建并存储
       if (!data) $this.data('bs.alert', (data = new Alert(this)));
+      // 如果传入方法名，调用对应方法
       if (typeof option == 'string') data[option].call($this)
     })
   }
 
-  var old = $.fn.alert;
+  var old = $.fn.alert;     // 保存原有alert方法（防冲突）
 
-  $.fn.alert             = Plugin;
-  $.fn.alert.Constructor = Alert;
+  $.fn.alert             = Plugin;      // 定义jQuery插件
+  $.fn.alert.Constructor = Alert;       // 暴露构造函数，便于扩展
 
 
   // ALERT NO CONFLICT
   // =================
 
+  // 防冲突方法
   $.fn.alert.noConflict = function () {
-    $.fn.alert = old;
-    return this
+    $.fn.alert = old;     // 恢复原有alert方法
+    return this           // 返回当前插件实例
   };
 
 
   // ALERT DATA-API
   // ==============
 
+  // 4. 数据API（自动初始化）
+  // 功能： 通过数据属性自动初始化：在文档上委托点击事件
+  // 为所有data-dismiss="alert"的元素自动绑定关闭功能
   $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
 
 }(jQuery);
