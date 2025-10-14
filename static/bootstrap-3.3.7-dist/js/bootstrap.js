@@ -716,6 +716,7 @@ if (typeof jQuery === 'undefined') {
   })
 
 }(jQuery);
+//模块四展示了复杂UI组件的完整架构，包括状态管理、动画处理、事件系统和用户交互，是前端组件开发的典范。
 
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.7
@@ -727,179 +728,244 @@ if (typeof jQuery === 'undefined') {
 
 /* jshint latedef: false */
 
+//模块五：Collapse（折叠面板）
 +function ($) {
   'use strict';
 
   // COLLAPSE PUBLIC CLASS DEFINITION
   // ================================
 
+  //1. 折叠类定义与初始化
+  //构造函数：初始化折叠实例，处理触发器和父级关系。
   var Collapse = function (element, options) {
-    this.$element      = $(element);
-    this.options       = $.extend({}, Collapse.DEFAULTS, options);
+    this.$element      = $(element);      // 折叠内容容器
+    this.options       = $.extend({}, Collapse.DEFAULTS, options);      // 合并配置
+    // 查找所有触发此折叠元素的触发器按钮
     this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
                            '[data-toggle="collapse"][data-target="#' + element.id + '"]');
-    this.transitioning = null;
+    this.transitioning = null;      // 过渡动画状态标志
 
+    // 如果设置了父级容器，初始化手风琴效果
     if (this.options.parent) {
       this.$parent = this.getParent()
     } else {
+      // 独立折叠元素：设置ARIA属性和初始状态
       this.addAriaAndCollapsedClass(this.$element, this.$trigger)
     }
 
+    // 如果配置了toggle选项，立即执行切换
     if (this.options.toggle) this.toggle()
   };
 
-  Collapse.VERSION  = '3.3.7';
+  Collapse.VERSION  = '3.3.7';      // 组件版本号
 
-  Collapse.TRANSITION_DURATION = 350;
+  Collapse.TRANSITION_DURATION = 350;     // 过渡动画持续时间
 
   Collapse.DEFAULTS = {
-    toggle: true
+    toggle: true      // 默认自动切换
   };
 
+  //2. 核心辅助方法+核心展开方法+核心收起方法
+  //维度检测：支持水平和垂直两种折叠方向。
   Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width');
-    return hasWidth ? 'width' : 'height'
+    var hasWidth = this.$element.hasClass('width');     // 检查是否是水平折叠
+    return hasWidth ? 'width' : 'height'      // 返回对应的CSS维度
   };
 
+  //显示折叠内容
   Collapse.prototype.show = function () {
+    // 安全检查1：如果正在过渡动画中或已经处于展开状态，直接返回避免重复操作
     if (this.transitioning || this.$element.hasClass('in')) return;
 
     var activesData;
+    // 手风琴模式检查：在父容器中查找当前正在展开或正在动画的项
     var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing');
 
     if (actives && actives.length) {
+      // 获取其他活动项的Collapse实例数据
       activesData = actives.data('bs.collapse');
+      // 安全检查2：如果其他项正在动画中，等待其完成，避免动画冲突
       if (activesData && activesData.transitioning) return
     }
+    //（总结）手风琴模式关键逻辑：
+    //      .in 类表示已展开状态
+    //      .collapsing 类表示动画进行中状态
+    //      确保同一时间只有一个项在展开动画中
 
+    // 触发展开前事件，允许外部代码阻止默认展开行为
     var startEvent = $.Event('show.bs.collapse');
     this.$element.trigger(startEvent);
+    // 如果事件被阻止（e.preventDefault()），停止执行
     if (startEvent.isDefaultPrevented()) return;
 
+    // 手风琴模式：先关闭其他已展开的项
     if (actives && actives.length) {
-      Plugin.call(actives, 'hide');
+      Plugin.call(actives, 'hide');     // 调用hide方法关闭其他项
+      // 清理数据引用：如果activesData不存在，设置为null避免内存泄漏
       activesData || actives.data('bs.collapse', null)
     }
+    // （总结）事件系统的重要性：
+    //       show.bs.collapse - 展开前触发，可取消
+    //       为开发者提供钩子，在特定时机执行自定义逻辑
 
-    var dimension = this.dimension();
+    var dimension = this.dimension();     // 获取折叠方向：'height' 或 'width'
 
+    // 准备展开动画的初始状态
     this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')[dimension](0)
-      .attr('aria-expanded', true);
+      .removeClass('collapse')      // 移除默认状态类
+      .addClass('collapsing')[dimension](0)     // 添加动画进行中类；设置初始尺寸为0（开始折叠状态）
+      .attr('aria-expanded', true);     // 无障碍支持：标记为展开状态
 
-    this.$trigger
-      .removeClass('collapsed')
-      .attr('aria-expanded', true);
+    // 同步更新触发器的状态
+      this.$trigger
+      .removeClass('collapsed')     // 移除折叠视觉状态
+      .attr('aria-expanded', true);     // 无障碍支持：标记触发器为展开状态
 
-    this.transitioning = 1;
+    this.transitioning = 1;     // 设置标志位，表示动画正在进行中
+    //（总结） CSS类状态管理：
+    //     collapse - 默认折叠状态
+    //     collapsing - 动画进行中状态
+    //     collapse in - 展开完成状态
+    //     collapsed - 触发器折叠视觉状态
 
+    // 定义动画完成后的回调函数
     var complete = function () {
       this.$element
-        .removeClass('collapsing')
-        .addClass('collapse in')[dimension]('');
-      this.transitioning = 0;
+        .removeClass('collapsing')      // 移除动画类
+        .addClass('collapse in')[dimension]('');      // 添加展开完成类；恢复自动尺寸（移除内联样式）
+      this.transitioning = 0;     // 清除动画标志
       this.$element
-        .trigger('shown.bs.collapse')
+        .trigger('shown.bs.collapse')     // 触发展开完成事件
     };
 
+    // 浏览器兼容性处理：如果不支持CSS过渡，直接执行完成回调
     if (!$.support.transition) return complete.call(this);
 
+    // 计算内容实际尺寸：将 'height' 转换为 'scrollHeight', 'width' 转换为 'scrollWidth'
     var scrollSize = $.camelCase(['scroll', dimension].join('-'));
 
+    // 执行CSS过渡动画
     this.$element
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      .one('bsTransitionEnd', $.proxy(complete, this))      // 绑定一次性过渡结束事件
+      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])      // 设置超时保障；动画到实际内容尺寸
   };
 
+  //隐藏折叠内容
   Collapse.prototype.hide = function () {
+    // 安全检查：如果正在动画中或已经处于收起状态，直接返回
     if (this.transitioning || !this.$element.hasClass('in')) return;
 
+    // 触发收起前事件
     var startEvent = $.Event('hide.bs.collapse');
     this.$element.trigger(startEvent);
     if (startEvent.isDefaultPrevented()) return;
 
     var dimension = this.dimension();
 
+    // 强制浏览器重排技巧：先获取再设置相同值，然后读取offsetHeight触发重排
+    // 这确保了CSS动画能够正确开始，避免浏览器优化导致的动画问题
     this.$element[dimension](this.$element[dimension]())[0].offsetHeight;
+    // （总结）强制重排的原理：
+    //     连续进行DOM读写操作，破坏浏览器批处理优化
+    //     确保CSS过渡动画从正确的最新状态开始
+    //     这是解决CSS动画常见问题的经典技巧
 
+    // 准备收起动画
     this.$element
-      .addClass('collapsing')
-      .removeClass('collapse in')
-      .attr('aria-expanded', false);
+      .addClass('collapsing')     // 添加动画类
+      .removeClass('collapse in')     // 移除展开状态类
+      .attr('aria-expanded', false);      // 更新无障碍属性
 
     this.$trigger
-      .addClass('collapsed')
-      .attr('aria-expanded', false);
+      .addClass('collapsed')      // 添加触发器折叠视觉状态
+      .attr('aria-expanded', false);      // 更新触发器无障碍属性
 
-    this.transitioning = 1;
+    this.transitioning = 1;     // 标记动画进行中
 
+    // 动画完成回调函数
     var complete = function () {
-      this.transitioning = 0;
+      this.transitioning = 0;     // 清除动画标志
       this.$element
-        .removeClass('collapsing')
-        .addClass('collapse')
-        .trigger('hidden.bs.collapse')
+        .removeClass('collapsing')      // 移除动画类
+        .addClass('collapse')     // 恢复默认折叠类
+        .trigger('hidden.bs.collapse')      // 触发收起完成事件
     };
 
+    // 浏览器兼容性处理
     if (!$.support.transition) return complete.call(this);
 
+    // 执行收起动画：从当前尺寸动画到0
     this.$element
-      [dimension](0)
+      [dimension](0)      // 设置目标尺寸为0
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
   };
+  // （总结）收起动画与展开动画的区别：
+  //   展开：从0尺寸 → 内容实际尺寸
+  //   收起：从当前尺寸 → 0尺寸
+  //   事件不同：hide.bs.collapse / hidden.bs.collapse
 
+  //切换折叠状态
   Collapse.prototype.toggle = function () {
+    // 智能状态判断：根据当前是否有 'in' 类决定执行收起还是展开
     this[this.$element.hasClass('in') ? 'hide' : 'show']()
   };
 
+  //父级容器处理：手风琴效果的核心，管理同一组内的折叠项。
   Collapse.prototype.getParent = function () {
     return $(this.options.parent)
+    // 在父容器中查找所有相关触发器
       .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
       .each($.proxy(function (i, element) {
         var $element = $(element);
+        // 为每个触发器设置ARIA属性和状态类
         this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
       }, this))
-      .end()
+      .end()      // 返回父容器jQuery对象
   };
 
+  //无障碍支持：为屏幕阅读器和键盘导航提供支持。
   Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
-    var isOpen = $element.hasClass('in');
+    var isOpen = $element.hasClass('in');     // 检查初始展开状态
 
-    $element.attr('aria-expanded', isOpen);
+    $element.attr('aria-expanded', isOpen);     // 设置内容区域的可访问性属性
     $trigger
-      .toggleClass('collapsed', !isOpen)
-      .attr('aria-expanded', isOpen)
+      .toggleClass('collapsed', !isOpen)      // 切换触发器视觉状态
+      .attr('aria-expanded', isOpen)      // 设置触发器的可访问性属性
   };
 
+  //目标解析：从触发器的data-target或href属性获取目标折叠元素。
   function getTargetFromTrigger($trigger) {
     var href;
+    // 解析触发器指向的目标元素
     var target = $trigger.attr('data-target')
-      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // strip for ie7
+      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // 清理IE7的href
 
-    return $(target)
+    return $(target)      // 返回目标元素的jQuery对象
   }
 
 
   // COLLAPSE PLUGIN DEFINITION
   // ==========================
 
+  //3. jQuery插件定义
   function Plugin(option) {
     return this.each(function () {
       var $this   = $(this);
       var data    = $this.data('bs.collapse');
       var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option);
 
+      // 特殊处理：如果通过show/hide方法初始化，禁用自动toggle
       if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false;
       if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)));
-      if (typeof option == 'string') data[option]()
+      if (typeof option == 'string') data[option]()     // 执行指定方法
     })
   }
 
+  // 保存旧的$.fn.collapse引用
   var old = $.fn.collapse;
 
+  // 注册jQuery插件
   $.fn.collapse             = Plugin;
   $.fn.collapse.Constructor = Collapse;
 
@@ -907,28 +973,34 @@ if (typeof jQuery === 'undefined') {
   // COLLAPSE NO CONFLICT
   // ====================
 
+  // 解决命名冲突
   $.fn.collapse.noConflict = function () {
-    $.fn.collapse = old;
-    return this
+    $.fn.collapse = old;      // 恢复原来的$.fn.collapse
+    return this     // 返回当前插件
   };
 
 
   // COLLAPSE DATA-API
   // =================
 
+  // 通过数据属性自动初始化
   $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
-    var $this   = $(this);
+    var $this   = $(this);      // 点击的触发器
 
+    // 如果没有data-target，阻止默认行为（如链接跳转）
     if (!$this.attr('data-target')) e.preventDefault();
 
+    // 获取目标折叠元素
     var $target = getTargetFromTrigger($this);
-    var data    = $target.data('bs.collapse');
-    var option  = data ? 'toggle' : $this.data();
+    var data    = $target.data('bs.collapse');      // 获取实例数据
+    var option  = data ? 'toggle' : $this.data();     // 已有实例则切换，否则初始化
 
+    // 初始化或调用折叠插件
     Plugin.call($target, option)
   })
 
 }(jQuery);
+//模块五展示了如何实现复杂的交互式UI组件，特别注重用户体验和可访问性。
 
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.7
