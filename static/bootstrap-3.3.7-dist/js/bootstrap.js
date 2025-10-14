@@ -420,56 +420,65 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块四：Carousel（轮播图）
 +function ($) {
   'use strict';
 
   // CAROUSEL CLASS DEFINITION
   // =========================
 
+  //1. 轮播类定义与初始化
   var Carousel = function (element, options) {
-    this.$element    = $(element);
-    this.$indicators = this.$element.find('.carousel-indicators');
-    this.options     = options;
-    this.paused      = null;
-    this.sliding     = null;
-    this.interval    = null;
-    this.$active     = null;
-    this.$items      = null;
+    this.$element    = $(element);      // 轮播容器
+    this.$indicators = this.$element.find('.carousel-indicators');      // 指示器
+    this.options     = options;     // 配置选项
+    this.paused      = null;        // 暂停状态
+    this.sliding     = null;        // 滑动进行中标志
+    this.interval    = null;        // 自动轮播计时器
+    this.$active     = null;        // 当前活动幻灯片
+    this.$items      = null;        // 所有幻灯片
 
+    // 键盘事件支持
     this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this));
 
+    // 鼠标悬停暂停（排除触摸设备）
     this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
       .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
       .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
   };
 
-  Carousel.VERSION  = '3.3.7';
+  Carousel.VERSION  = '3.3.7';      // 组件版本号
 
-  Carousel.TRANSITION_DURATION = 600;
+  Carousel.TRANSITION_DURATION = 600;     // 过渡动画持续时间
 
   Carousel.DEFAULTS = {
-    interval: 5000,
-    pause: 'hover',
-    wrap: true,
-    keyboard: true
+    interval: 5000,     // 自动轮播间隔
+    pause: 'hover',     // 悬停暂停
+    wrap: true,         // 循环播放
+    keyboard: true      // 键盘支持
   };
 
+  //2. 事件处理方法
+  //键盘导航：支持左右箭头键切换幻灯片。
   Carousel.prototype.keydown = function (e) {
+    // 如果在输入框中，不处理键盘事件
     if (/input|textarea/i.test(e.target.tagName)) return;
     switch (e.which) {
-      case 37: this.prev(); break;
-      case 39: this.next(); break;
+      case 37: this.prev(); break;      // 左箭头：上一张
+      case 39: this.next(); break;      // 右箭头：下一张
       default: return
     }
 
-    e.preventDefault()
+    e.preventDefault()      // 阻止默认行为
   };
 
+  //自动轮播控制：启动或恢复自动轮播。
   Carousel.prototype.cycle = function (e) {
-    e || (this.paused = false);
+    e || (this.paused = false);     // 重置暂停状态
 
-    this.interval && clearInterval(this.interval);
+    this.interval && clearInterval(this.interval);      // 清除现有计时器
 
+    // 设置新的自动轮播计时器
     this.options.interval
       && !this.paused
       && (this.interval = setInterval($.proxy(this.next, this), this.options.interval));
@@ -477,107 +486,138 @@ if (typeof jQuery === 'undefined') {
     return this
   };
 
+  //3. 幻灯片导航核心方法
+  //索引计算：获取幻灯片在容器中的位置。
   Carousel.prototype.getItemIndex = function (item) {
-    this.$items = item.parent().children('.item');
-    return this.$items.index(item || this.$active)
+    this.$items = item.parent().children('.item');      // 获取所有幻灯片
+    return this.$items.index(item || this.$active)      // 返回指定幻灯片的索引
   };
 
+  //方向导航：根据方向计算下一张幻灯片，支持循环逻辑。
   Carousel.prototype.getItemForDirection = function (direction, active) {
     var activeIndex = this.getItemIndex(active);
+    // 检查是否到达边界且不允许循环
     var willWrap = (direction == 'prev' && activeIndex === 0)
                 || (direction == 'next' && activeIndex == (this.$items.length - 1));
-    if (willWrap && !this.options.wrap) return active;
+    if (willWrap && !this.options.wrap) return active;      // 不循环则返回当前
+
     var delta = direction == 'prev' ? -1 : 1;
-    var itemIndex = (activeIndex + delta) % this.$items.length;
+    var itemIndex = (activeIndex + delta) % this.$items.length;     // 计算新索引（支持循环）
     return this.$items.eq(itemIndex)
   };
 
+  //跳转到指定位置：支持直接跳转到特定幻灯片。
   Carousel.prototype.to = function (pos) {
     var that        = this;
     var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'));
 
-    if (pos > (this.$items.length - 1) || pos < 0) return;
+    if (pos > (this.$items.length - 1) || pos < 0) return;      // 索引越界检查
 
+    // 如果正在滑动，等待完成后执行
     if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }); // yes, "slid"
-    if (activeIndex == pos) return this.pause().cycle();
+    if (activeIndex == pos) return this.pause().cycle();      // 已经是目标位置
 
+    // 根据位置关系决定滑动方向
     return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
   };
 
+  //4. 暂停与导航控制方法
   Carousel.prototype.pause = function (e) {
+    // 设置暂停状态：如果有事件参数，保持原状态；否则设置为true
     e || (this.paused = true);
 
+    // 处理特殊情况：当有滑动动画正在进行时，需要立即完成过渡
     if (this.$element.find('.next, .prev').length && $.support.transition) {
+      // 手动触发过渡结束事件，强制立即完成当前动画
       this.$element.trigger($.support.transition.end);
+      // 重新启动轮播周期（参数true表示强制重置）
       this.cycle(true)
     }
 
+    // 清除自动轮播的计时器
     this.interval = clearInterval(this.interval);
 
-    return this
+    return this     // 支持链式调用
   };
 
   Carousel.prototype.next = function () {
+    // 安全检查：如果正在滑动中，忽略此次调用（防止重复触发）
     if (this.sliding) return;
+    
+    // 调用slide方法执行"下一张"滑动
     return this.slide('next')
   };
 
   Carousel.prototype.prev = function () {
+    // 同样的防重复触发检查
     if (this.sliding) return;
+
+    // 调用slide方法执行"上一张"滑动
     return this.slide('prev')
   };
 
+  //5. 滑动动画核心逻辑
   Carousel.prototype.slide = function (type, next) {
-    var $active   = this.$element.find('.item.active');
-    var $next     = next || this.getItemForDirection(type, $active);
-    var isCycling = this.interval;
-    var direction = type == 'next' ? 'left' : 'right';
+    var $active   = this.$element.find('.item.active');     // 当前活动幻灯片
+    var $next     = next || this.getItemForDirection(type, $active);      // 下一张幻灯片
+    var isCycling = this.interval;      // 是否正在自动轮播
+    var direction = type == 'next' ? 'left' : 'right';      // 滑动方向
     var that      = this;
 
-    if ($next.hasClass('active')) return (this.sliding = false);
+    if ($next.hasClass('active')) return (this.sliding = false);      // 已经是活动状态
 
+    // 触发滑动前事件
+    //滑动准备阶段：验证滑动条件，更新UI状态。
     var relatedTarget = $next[0];
     var slideEvent = $.Event('slide.bs.carousel', {
       relatedTarget: relatedTarget,
       direction: direction
     });
     this.$element.trigger(slideEvent);
-    if (slideEvent.isDefaultPrevented()) return;
+    if (slideEvent.isDefaultPrevented()) return;      // 事件被取消则停止
 
-    this.sliding = true;
+    this.sliding = true;      // 标记滑动开始
 
-    isCycling && this.pause();
+    isCycling && this.pause();      // 暂停自动轮播
 
+    // 更新指示器状态
     if (this.$indicators.length) {
       this.$indicators.find('.active').removeClass('active');
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)]);
       $nextIndicator && $nextIndicator.addClass('active')
     }
 
+    // 触发滑动后事件
+    //动画执行阶段：处理CSS过渡动画或直接切换。
     var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }); // yes, "slid"
+    // CSS过渡动画支持
     if ($.support.transition && this.$element.hasClass('slide')) {
       $next.addClass(type);
-      $next[0].offsetWidth; // force reflow
+      $next[0].offsetWidth;       // 强制重排，触发CSS过渡
       $active.addClass(direction);
       $next.addClass(direction);
       $active
         .one('bsTransitionEnd', function () {
+          // 动画完成后的清理工作
           $next.removeClass([type, direction].join(' ')).addClass('active');
           $active.removeClass(['active', direction].join(' '));
           that.sliding = false;
+
+          // 异步触发滑动完成事件
           setTimeout(function () {
             that.$element.trigger(slidEvent)
           }, 0)
         })
-        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
+        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)     // 过渡结束保障
     } else {
+      // 无动画版本的简单切换
       $active.removeClass('active');
       $next.addClass('active');
       this.sliding = false;
       this.$element.trigger(slidEvent)
     }
 
-    isCycling && this.cycle();
+    isCycling && this.cycle();      // 恢复自动轮播
 
     return this
   };
@@ -586,6 +626,8 @@ if (typeof jQuery === 'undefined') {
   // CAROUSEL PLUGIN DEFINITION
   // ==========================
 
+  //6. jQuery插件定义
+  //插件接口：支持多种调用方式。
   function Plugin(option) {
     return this.each(function () {
       var $this   = $(this);
@@ -594,9 +636,9 @@ if (typeof jQuery === 'undefined') {
       var action  = typeof option == 'string' ? option : options.slide;
 
       if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)));
-      if (typeof option == 'number') data.to(option);
-      else if (action) data[action]();
-      else if (options.interval) data.pause().cycle()
+      if (typeof option == 'number') data.to(option);     // 跳转到指定索引
+      else if (action) data[action]();      // 执行指定动作
+      else if (options.interval) data.pause().cycle()     // 启动自动轮播
     })
   }
 
@@ -618,29 +660,33 @@ if (typeof jQuery === 'undefined') {
   // CAROUSEL DATA-API
   // =================
 
+  //7. 数据API（自动初始化）
+  //点击事件处理：处理导航按钮和指示器的点击。
   var clickHandler = function (e) {
     var href;
     var $this   = $(this);
+    // 解析目标轮播容器
     var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')); // strip for ie7
     if (!$target.hasClass('carousel')) return;
     var options = $.extend({}, $target.data(), $this.data());
     var slideIndex = $this.attr('data-slide-to');
-    if (slideIndex) options.interval = false;
+    if (slideIndex) options.interval = false;     // 手动切换时暂停自动轮播
 
     Plugin.call($target, options);
 
     if (slideIndex) {
-      $target.data('bs.carousel').to(slideIndex)
+      $target.data('bs.carousel').to(slideIndex)      // 跳转到指定幻灯片
     }
 
     e.preventDefault()
   };
 
   $(document)
-    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
-    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler);
+    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)     // 上一张/下一张
+    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler);     // 跳转到指定位置
 
-  $(window).on('load', function () {
+  // 页面加载完成后自动初始化
+    $(window).on('load', function () {
     $('[data-ride="carousel"]').each(function () {
       var $carousel = $(this);
       Plugin.call($carousel, $carousel.data())
