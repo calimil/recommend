@@ -443,8 +443,8 @@ if (typeof jQuery === 'undefined') {
 
     // 鼠标悬停暂停（排除触摸设备）
     this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
-      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
-      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
+      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))      // 鼠标进入暂停
+      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))      // 鼠标离开继续
   };
 
   Carousel.VERSION  = '3.3.7';      // 组件版本号
@@ -466,7 +466,7 @@ if (typeof jQuery === 'undefined') {
     switch (e.which) {
       case 37: this.prev(); break;      // 左箭头：上一张
       case 39: this.next(); break;      // 右箭头：下一张
-      default: return
+      default: return     // 其他按键不处理
     }
 
     e.preventDefault()      // 阻止默认行为
@@ -501,6 +501,7 @@ if (typeof jQuery === 'undefined') {
                 || (direction == 'next' && activeIndex == (this.$items.length - 1));
     if (willWrap && !this.options.wrap) return active;      // 不循环则返回当前
 
+    // 计算方向增量：上一张减1，下一张加1
     var delta = direction == 'prev' ? -1 : 1;
     var itemIndex = (activeIndex + delta) % this.$items.length;     // 计算新索引（支持循环）
     return this.$items.eq(itemIndex)
@@ -508,8 +509,8 @@ if (typeof jQuery === 'undefined') {
 
   //跳转到指定位置：支持直接跳转到特定幻灯片。
   Carousel.prototype.to = function (pos) {
-    var that        = this;
-    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'));
+    var that        = this;     // 保存this引用
+    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'));     // 当前激活索引
 
     if (pos > (this.$items.length - 1) || pos < 0) return;      // 索引越界检查
 
@@ -580,9 +581,11 @@ if (typeof jQuery === 'undefined') {
 
     isCycling && this.pause();      // 暂停自动轮播
 
-    // 更新指示器状态
+    // 如果有指示器，更新指示器状态
     if (this.$indicators.length) {
+      // 移除当前激活的指示器
       this.$indicators.find('.active').removeClass('active');
+      // 获取对应位置的指示器并激活
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)]);
       $nextIndicator && $nextIndicator.addClass('active')
     }
@@ -592,15 +595,21 @@ if (typeof jQuery === 'undefined') {
     var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }); // yes, "slid"
     // CSS过渡动画支持
     if ($.support.transition && this.$element.hasClass('slide')) {
+      // 添加滑动方向类
       $next.addClass(type);
       $next[0].offsetWidth;       // 强制重排，触发CSS过渡
+      // 添加滑动动画类
       $active.addClass(direction);
       $next.addClass(direction);
+      
+      // 绑定过渡结束事件
       $active
         .one('bsTransitionEnd', function () {
           // 动画完成后的清理工作
           $next.removeClass([type, direction].join(' ')).addClass('active');
+           // 移除当前激活项的类
           $active.removeClass(['active', direction].join(' '));
+          // 标记滑动结束
           that.sliding = false;
 
           // 异步触发滑动完成事件
@@ -614,6 +623,7 @@ if (typeof jQuery === 'undefined') {
       $active.removeClass('active');
       $next.addClass('active');
       this.sliding = false;
+      // 触发滑动结束事件
       this.$element.trigger(slidEvent)
     }
 
@@ -630,20 +640,25 @@ if (typeof jQuery === 'undefined') {
   //插件接口：支持多种调用方式。
   function Plugin(option) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.carousel');
-      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option);
-      var action  = typeof option == 'string' ? option : options.slide;
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.carousel');      // 从数据缓存获取实例
+      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option);     // 合并配置
+      var action  = typeof option == 'string' ? option : options.slide;     // 判断操作类型
 
+      // 如果没有初始化过，创建新实例并缓存
       if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)));
+      
+      // 根据option类型执行相应操作
       if (typeof option == 'number') data.to(option);     // 跳转到指定索引
       else if (action) data[action]();      // 执行指定动作
       else if (options.interval) data.pause().cycle()     // 启动自动轮播
     })
   }
 
+  // 保存旧的$.fn.carousel引用
   var old = $.fn.carousel;
 
+  // 注册jQuery插件
   $.fn.carousel             = Plugin;
   $.fn.carousel.Constructor = Carousel;
 
@@ -651,9 +666,10 @@ if (typeof jQuery === 'undefined') {
   // CAROUSEL NO CONFLICT
   // ====================
 
+  // 解决命名冲突
   $.fn.carousel.noConflict = function () {
-    $.fn.carousel = old;
-    return this
+    $.fn.carousel = old;      // 恢复原来的$.fn.carousel
+    return this     // 返回当前插件
   };
 
 
@@ -664,28 +680,34 @@ if (typeof jQuery === 'undefined') {
   //点击事件处理：处理导航按钮和指示器的点击。
   var clickHandler = function (e) {
     var href;
-    var $this   = $(this);
+    var $this   = $(this);      // 点击的元素
     // 解析目标轮播容器
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')); // strip for ie7
+    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')); // 处理IE7兼容
+    // 如果不是轮播容器，直接返回
     if (!$target.hasClass('carousel')) return;
+    
+    // 合并配置选项
     var options = $.extend({}, $target.data(), $this.data());
-    var slideIndex = $this.attr('data-slide-to');
+    var slideIndex = $this.attr('data-slide-to');     // 获取目标幻灯片索引
     if (slideIndex) options.interval = false;     // 手动切换时暂停自动轮播
 
+    // 初始化或调用轮播插件
     Plugin.call($target, options);
 
+    // 如果指定了具体索引，跳转到该索引
     if (slideIndex) {
       $target.data('bs.carousel').to(slideIndex)      // 跳转到指定幻灯片
     }
 
-    e.preventDefault()
+    e.preventDefault()      // 阻止默认行为
   };
 
+  // 通过数据属性自动初始化
   $(document)
     .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)     // 上一张/下一张
     .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler);     // 跳转到指定位置
 
-  // 页面加载完成后自动初始化
+  // 页面加载完成后自动初始化带有data-ride="carousel"的轮播
     $(window).on('load', function () {
     $('[data-ride="carousel"]').each(function () {
       var $carousel = $(this);
