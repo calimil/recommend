@@ -1021,6 +1021,8 @@ if (typeof jQuery === 'undefined') {
   //1. 下拉菜单类定义与常量
   var backdrop = '.dropdown-backdrop';      // 下拉菜单背景层选择器
   var toggle   = '[data-toggle="dropdown"]';      // 下拉菜单触发器选择器
+  
+  // Dropdown构造函数
   var Dropdown = function (element) {
     // 为元素绑定点击事件，使用命名空间避免冲突
     $(element).on('click.bs.dropdown', this.toggle)
@@ -1031,16 +1033,17 @@ if (typeof jQuery === 'undefined') {
   //2. 核心辅助函数
   function getParent($this) {
     // 获取下拉菜单的目标父容器
-    var selector = $this.attr('data-target');
+    var selector = $this.attr('data-target');      // 获取data-target属性
 
+    // 如果没有data-target，尝试从href属性获取
     if (!selector) {
-      // 如果没有data-target，尝试从href属性获取
-      selector = $this.attr('href');
+      selector = $this.attr('href');      // 获取href
       // 验证并清理href，确保是有效的ID选择器（处理IE7兼容性）
       selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
     }
 
-    var $parent = selector && $(selector);      // 转换为jQuery对象
+    // 根据选择器获取父级元素
+    var $parent = selector && $(selector);
 
     // 返回找到的父容器，如果没找到则返回直接父元素
     return $parent && $parent.length ? $parent : $this.parent()
@@ -1050,6 +1053,7 @@ if (typeof jQuery === 'undefined') {
   //     提供回退机制，确保总能找到有效的父容器
   //     处理IE7的href兼容性问题
 
+  // 清除所有已打开的下拉菜单
   function clearMenus(e) {
     // 如果是鼠标右键点击（which === 3），不关闭菜单
     if (e && e.which === 3) return;
@@ -1059,7 +1063,7 @@ if (typeof jQuery === 'undefined') {
 
     // 遍历所有下拉菜单触发器
     $(toggle).each(function () {
-      var $this         = $(this);
+      var $this         = $(this);      // 当前触发器
       var $parent       = getParent($this);     // 获取对应的下拉菜单容器
       var relatedTarget = { relatedTarget: this };      // 事件相关目标
 
@@ -1089,8 +1093,9 @@ if (typeof jQuery === 'undefined') {
   //     无障碍支持：正确更新ARIA属性
 
   //3. 下拉菜单原型方法
+  // 切换下拉菜单的显示/隐藏
   Dropdown.prototype.toggle = function (e) {
-    var $this = $(this);
+    var $this = $(this);      // 当前触发器
 
     // 如果触发器被禁用，直接返回
     if ($this.is('.disabled, :disabled')) return;
@@ -1105,16 +1110,18 @@ if (typeof jQuery === 'undefined') {
     //   获取正确的菜单容器
     //   清理其他菜单，确保同时只有一个菜单打开
 
+    // 如果当前菜单未打开
     if (!isActive) {
-      // 移动端处理：添加背景层（因为点击事件在移动端不会冒泡）
+      // 如果是移动设备且不在导航栏内，创建背景层
       if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
-        // if mobile we use a backdrop because click events don't delegate
+        // 创建下拉菜单背景层
         $(document.createElement('div'))      
           .addClass('dropdown-backdrop')      // 添加背景层类
           .insertAfter($(this))     // 插入到触发器后面
           .on('click', clearMenus)      // 点击背景层关闭所有菜单
       }
 
+      // 准备事件相关数据
       var relatedTarget = { relatedTarget: this };
       // 触发展开前事件
       $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget));
@@ -1123,13 +1130,13 @@ if (typeof jQuery === 'undefined') {
 
       // 聚焦触发器并更新无障碍属性
       $this
-        .trigger('focus')
-        .attr('aria-expanded', 'true');
+        .trigger('focus')     // 触发focus事件
+        .attr('aria-expanded', 'true');     // 设置展开状态
 
       // 打开下拉菜单并触发展开完成事件
         $parent
-        .toggleClass('open')
-        .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        .toggleClass('open')      // 切换open类
+        .trigger($.Event('shown.bs.dropdown', relatedTarget))     // 触发显示完成事件
     }
 
     return false      // 阻止默认行为和事件冒泡
@@ -1140,6 +1147,7 @@ if (typeof jQuery === 'undefined') {
   //     事件生命周期：show.bs.dropdown → 展开 → shown.bs.dropdown
   //     无障碍支持：正确管理焦点和ARIA属性
 
+  // 键盘事件处理
   Dropdown.prototype.keydown = function (e) {
     // 只处理特定按键（上、下、ESC、空格）且不在输入框中
     if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return;
@@ -1149,10 +1157,12 @@ if (typeof jQuery === 'undefined') {
     e.preventDefault();     // 阻止默认行为
     e.stopPropagation();      // 停止事件传播
 
-    // 禁用状态检查
+    // 禁用状态检查，如果元素被禁用，直接返回
     if ($this.is('.disabled, :disabled')) return;
 
+    // 获取父级下拉菜单
     var $parent  = getParent($this);
+    // 检查是否已打开
     var isActive = $parent.hasClass('open');
     // （总结）键盘导航初始处理：
     //   按键过滤：只处理方向键、ESC键、空格键
@@ -1197,7 +1207,7 @@ if (typeof jQuery === 'undefined') {
   function Plugin(option) {
     return this.each(function () {
       var $this = $(this);
-      var data  = $this.data('bs.dropdown');
+      var data  = $this.data('bs.dropdown');      // 从数据缓存获取实例
 
       // 单例模式：确保每个元素只有一个Dropdown实例
       if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)));
