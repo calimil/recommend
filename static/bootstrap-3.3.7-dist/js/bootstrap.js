@@ -1257,248 +1257,307 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块七：Modal（模态框）
 +function ($) {
   'use strict';
 
   // MODAL CLASS DEFINITION
   // ======================
 
+  //1. 模态框类定义与初始化
+  //构造函数：初始化模态框实例，处理远程内容加载。
   var Modal = function (element, options) {
-    this.options             = options;
-    this.$body               = $(document.body);
-    this.$element            = $(element);
-    this.$dialog             = this.$element.find('.modal-dialog');
-    this.$backdrop           = null;
-    this.isShown             = null;
-    this.originalBodyPad     = null;
-    this.scrollbarWidth      = 0;
-    this.ignoreBackdropClick = false;
+    this.options             = options;     // 配置选项
+    this.$body               = $(document.body);      // 页面body元素
+    this.$element            = $(element);      // 模态框容器
+    this.$dialog             = this.$element.find('.modal-dialog');     // 模态框对话框
+    this.$backdrop           = null;      // 背景遮罩层
+    this.isShown             = null;      // 显示状态标志
+    this.originalBodyPad     = null;      // 原始body内边距
+    this.scrollbarWidth      = 0;     // 滚动条宽度
+    this.ignoreBackdropClick = false;     // 忽略背景点击标志
 
+    // 远程内容加载：如果配置了remote选项，通过AJAX加载内容
     if (this.options.remote) {
       this.$element
         .find('.modal-content')
         .load(this.options.remote, $.proxy(function () {
-          this.$element.trigger('loaded.bs.modal')
+          this.$element.trigger('loaded.bs.modal')      // 触发内容加载完成事件
         }, this))
     }
   };
 
-  Modal.VERSION  = '3.3.7';
+  Modal.VERSION  = '3.3.7';     // 组件版本号
 
-  Modal.TRANSITION_DURATION = 300;
-  Modal.BACKDROP_TRANSITION_DURATION = 150;
+  Modal.TRANSITION_DURATION = 300;      // 模态框动画持续时间
+  Modal.BACKDROP_TRANSITION_DURATION = 150;     // 背景遮罩动画持续时间   
 
+   // 默认配置
   Modal.DEFAULTS = {
-    backdrop: true,
-    keyboard: true,
-    show: true
+    backdrop: true,     // 是否显示背景遮罩
+    keyboard: true,     // 是否支持ESC键关闭
+    show: true      // 初始化后是否立即显示
   };
 
+  //2. 核心显示方法
+  //显示准备阶段：状态设置、事件绑定、滚动条处理。
   Modal.prototype.toggle = function (_relatedTarget) {
+    // 根据当前状态调用show或hide方法
     return this.isShown ? this.hide() : this.show(_relatedTarget)
   };
 
+  // 显示模态框
   Modal.prototype.show = function (_relatedTarget) {
-    var that = this;
+    var that = this;      // 保存this引用
+    // 触发展示前事件，传递相关目标（触发元素）
     var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget });
 
+    // 触发显示开始事件
     this.$element.trigger(e);
 
+    // 如果已经在显示或事件被取消，直接返回
     if (this.isShown || e.isDefaultPrevented()) return;
 
-    this.isShown = true;
+    this.isShown = true;      // 设置显示状态
 
-    this.checkScrollbar();
+    // 滚动条处理：防止页面抖动
+    this.checkScrollbar();    
     this.setScrollbar();
-    this.$body.addClass('modal-open');
+    this.$body.addClass('modal-open');      // 给body添加类，防止背景滚动
 
-    this.escape();
-    this.resize();
+    this.escape();      // 绑定ESC键事件
+    this.resize();      // 绑定窗口调整事件
 
+    // 绑定关闭按钮点击事件
     this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this));
 
+    // 处理背景点击：防止快速点击导致的意外关闭
+    //点击处理优化：防止鼠标拖拽操作误触发关闭。
     this.$dialog.on('mousedown.dismiss.bs.modal', function () {
       that.$element.one('mouseup.dismiss.bs.modal', function (e) {
+        // 如果鼠标在模态框内按下并在模态框外释放，忽略此次背景点击
         if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
       })
     });
 
+    // 显示背景遮罩，完成后执行回调
     this.backdrop(function () {
       var transition = $.support.transition && that.$element.hasClass('fade');
 
+      // 确保模态框在DOM中的正确位置
       if (!that.$element.parent().length) {
-        that.$element.appendTo(that.$body) // don't move modals dom position
+        that.$element.appendTo(that.$body)      // 不移动模态框的DOM位置
       }
 
+      // 显示模态框并滚动到顶部
       that.$element
-        .show()
-        .scrollTop(0);
+        .show()     // 显示模态框
+        .scrollTop(0);      // 滚动到顶部
 
-      that.adjustDialog();
+      that.adjustDialog();      // 调整对话框位置
 
+      // 强制重排，触发CSS过渡动画
+      //动画执行阶段：处理显示动画和焦点管理。
       if (transition) {
         that.$element[0].offsetWidth // force reflow
       }
 
-      that.$element.addClass('in');
+      that.$element.addClass('in');     // 添加显示类，触发动画
 
-      that.enforceFocus();
+      that.enforceFocus();      // 强制焦点保持在模态框内
 
+      // 创建显示完成事件
       var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget });
 
+      // 根据是否支持过渡动画分别处理
       transition ?
-        that.$dialog // wait for modal to slide in
+        that.$dialog /// 等待模态框滑入动画完成
           .one('bsTransitionEnd', function () {
-            that.$element.trigger('focus').trigger(e)
+            that.$element.trigger('focus').trigger(e)     // 触发焦点和完成事件
           })
-          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-        that.$element.trigger('focus').trigger(e)
+          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :      // 模拟过渡结束
+        that.$element.trigger('focus').trigger(e)     // 无动画直接触发
     })
   };
 
+  //3. 核心隐藏方法
+  //隐藏逻辑：清理事件、执行隐藏动画。
   Modal.prototype.hide = function (e) {
-    if (e) e.preventDefault();
+    if (e) e.preventDefault();      // 阻止默认行为
 
-    e = $.Event('hide.bs.modal');
+    e = $.Event('hide.bs.modal');     // 触发隐藏前事件
 
     this.$element.trigger(e);
 
+    // 如果未在显示或事件被取消，直接返回
     if (!this.isShown || e.isDefaultPrevented()) return;
 
-    this.isShown = false;
+    this.isShown = false;     // 设置隐藏状态
 
-    this.escape();
-    this.resize();
+    this.escape();      // 移除ESC键事件
+    this.resize();      // 移除调整大小事件
 
-    $(document).off('focusin.bs.modal');
+    $(document).off('focusin.bs.modal');      // 移除焦点强制事件
 
+    // 移除事件监听器和显示类
     this.$element
-      .removeClass('in')
-      .off('click.dismiss.bs.modal')
-      .off('mouseup.dismiss.bs.modal');
+      .removeClass('in')      // 移除显示类
+      .off('click.dismiss.bs.modal')      // 移除点击关闭事件
+      .off('mouseup.dismiss.bs.modal');     // 移除鼠标释放事件
 
-    this.$dialog.off('mousedown.dismiss.bs.modal');
+    this.$dialog.off('mousedown.dismiss.bs.modal');     // 移除鼠标按下事件
 
+    // 根据是否支持过渡动画执行隐藏
     $.support.transition && this.$element.hasClass('fade') ?
       this.$element
-        .one('bsTransitionEnd', $.proxy(this.hideModal, this))
+        .one('bsTransitionEnd', $.proxy(this.hideModal, this))      // 动画完成后隐藏
         .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-      this.hideModal()
+      this.hideModal()      // 无动画直接隐藏
   };
 
+  //4. 焦点管理与事件处理
+  //焦点强制：确保用户无法通过Tab键将焦点移出模态框。
   Modal.prototype.enforceFocus = function () {
     $(document)
-      .off('focusin.bs.modal') // guard against infinite focus loop
+      .off('focusin.bs.modal') // 防止无限焦点循环
       .on('focusin.bs.modal', $.proxy(function (e) {
+        // 如果焦点不在文档、模态框本身或模态框内的元素上
         if (document !== e.target &&
             this.$element[0] !== e.target &&
             !this.$element.has(e.target).length) {
-          this.$element.trigger('focus')
+          this.$element.trigger('focus')      // 强制焦点回到模态框
         }
       }, this))
   };
 
+  //键盘支持：ESC键关闭功能。
   Modal.prototype.escape = function () {
     if (this.isShown && this.options.keyboard) {
+      // 显示状态且启用键盘：绑定ESC键关闭
       this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
-        e.which == 27 && this.hide()
+        e.which == 27 && this.hide()      // ESC键隐藏
       }, this))
     } else if (!this.isShown) {
+      // 隐藏状态：移除键盘事件
       this.$element.off('keydown.dismiss.bs.modal')
     }
   };
 
+  // 窗口大小调整处理
   Modal.prototype.resize = function () {
+    // 如果显示状态，绑定窗口大小调整事件
     if (this.isShown) {
       $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
     } else {
+      // 如果隐藏状态，移除窗口大小调整事件
       $(window).off('resize.bs.modal')
     }
   };
 
+  //隐藏完成处理：清理DOM状态，触发完成事件。
   Modal.prototype.hideModal = function () {
     var that = this;
-    this.$element.hide();
+    this.$element.hide();     // 隐藏模态框
     this.backdrop(function () {
-      that.$body.removeClass('modal-open');
-      that.resetAdjustments();
-      that.resetScrollbar();
-      that.$element.trigger('hidden.bs.modal')
+      that.$body.removeClass('modal-open');     // 移除body类，恢复滚动
+      that.resetAdjustments();      // 重置调整
+      that.resetScrollbar();      // 重置滚动条
+      that.$element.trigger('hidden.bs.modal')      // 触发隐藏完成事件
     })
   };
 
+  // 移除背景层
   Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove();
-    this.$backdrop = null
+    this.$backdrop && this.$backdrop.remove();      // 移除背景层元素
+    this.$backdrop = null     // 清空引用
   };
 
+  //5. 背景遮罩管理
+  //背景遮罩创建：处理背景点击逻辑。
   Modal.prototype.backdrop = function (callback) {
     var that = this;
-    var animate = this.$element.hasClass('fade') ? 'fade' : '';
+    // 根据模态框是否有fade类决定是否使用动画
+    var animate = this.$element.hasClass('fade') ? 'fade' : '';     // 动画类
 
+    // 如果需要显示背景层且模态框正在显示
     if (this.isShown && this.options.backdrop) {
-      var doAnimate = $.support.transition && animate;
+      var doAnimate = $.support.transition && animate;      // 是否执行动画
 
+      // 创建背景遮罩
       this.$backdrop = $(document.createElement('div'))
         .addClass('modal-backdrop ' + animate)
         .appendTo(this.$body);
 
-      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
+      // 背景点击事件处理
+        this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
         if (this.ignoreBackdropClick) {
-          this.ignoreBackdropClick = false;
+          this.ignoreBackdropClick = false;    // 重置忽略标志 
           return
         }
-        if (e.target !== e.currentTarget) return;
+        if (e.target !== e.currentTarget) return;     // 确保点击的是背景本身
         this.options.backdrop == 'static'
-          ? this.$element[0].focus()
-          : this.hide()
+          ? this.$element[0].focus()      // 静态背景：只聚焦不关闭
+          : this.hide()     // 非静态背景：关闭模态框
       }, this));
 
-      if (doAnimate) this.$backdrop[0].offsetWidth; // force reflow
+      // 背景显示动画
+      //背景动画处理：完整的显示/隐藏动画管理。
+      if (doAnimate) this.$backdrop[0].offsetWidth;       // 强制重排
 
-      this.$backdrop.addClass('in');
+      this.$backdrop.addClass('in');      // 显示背景
 
       if (!callback) return;
 
+      // 根据动画支持执行回调
       doAnimate ?
         this.$backdrop
-          .one('bsTransitionEnd', callback)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callback()
+          .one('bsTransitionEnd', callback)     // 动画结束后执行回调
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :     // 模拟过渡结束
+        callback()      // 直接执行回调
 
     } else if (!this.isShown && this.$backdrop) {
-      this.$backdrop.removeClass('in');
+      // 隐藏背景
+      this.$backdrop.removeClass('in');     // 移除显示类
 
+      // 定义移除背景层的回调函数
       var callbackRemove = function () {
-        that.removeBackdrop();
-        callback && callback()
+        that.removeBackdrop();      // 移除背景层
+        callback && callback()      // 执行回调
       };
+
+      // 根据是否支持动画执行不同的移除逻辑
+      // 背景隐藏动画
       $.support.transition && this.$element.hasClass('fade') ?
         this.$backdrop
-          .one('bsTransitionEnd', callbackRemove)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callbackRemove()
+          .one('bsTransitionEnd', callbackRemove)     // 动画结束后移除
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :     // 模拟过渡结束
+        callbackRemove()  // 直接移除    
 
     } else if (callback) {
-      callback()
+      callback()      // 直接执行回调
     }
   };
 
-  // these following methods are used to handle overflowing modals
+  // 以下方法用于处理模态框溢出情况
 
+  // 处理更新（窗口大小变化时调用）
   Modal.prototype.handleUpdate = function () {
-    this.adjustDialog()
+    this.adjustDialog()     // 调整对话框
   };
 
+  // 调整对话框位置
   Modal.prototype.adjustDialog = function () {
+    // 检查模态框内容是否溢出视口
     var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight;
 
+    // 根据溢出情况调整左右padding
     this.$element.css({
       paddingLeft:  !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
       paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
     })
   };
 
+  // 重置调整
   Modal.prototype.resetAdjustments = function () {
     this.$element.css({
       paddingLeft: '',
@@ -1506,19 +1565,25 @@ if (typeof jQuery === 'undefined') {
     })
   };
 
+  //6. 滚动条处理（防止页面抖动）
+  //滚动条检测：判断页面是否有滚动条。
   Modal.prototype.checkScrollbar = function () {
     var fullWindowWidth = window.innerWidth;
-    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
+    // IE8兼容性处理
+    if (!fullWindowWidth) {
       var documentElementRect = document.documentElement.getBoundingClientRect();
       fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
     }
+    // 检查body是否出现滚动条
     this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth;
-    this.scrollbarWidth = this.measureScrollbar()
+    this.scrollbarWidth = this.measureScrollbar()     // 测量滚动条宽度
   };
 
+  //滚动条补偿：通过padding补偿滚动条占用的空间。
   Modal.prototype.setScrollbar = function () {
     var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10);
     this.originalBodyPad = document.body.style.paddingRight || '';
+    // 如果body有滚动条，增加padding防止页面抖动
     if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
   };
 
@@ -1526,12 +1591,14 @@ if (typeof jQuery === 'undefined') {
     this.$body.css('padding-right', this.originalBodyPad)
   };
 
+  //滚动条测量：精确计算滚动条宽度。
   Modal.prototype.measureScrollbar = function () { // thx walsh
+    // 创建测量元素计算滚动条宽度
     var scrollDiv = document.createElement('div');
     scrollDiv.className = 'modal-scrollbar-measure';
     this.$body.append(scrollDiv);
-    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-    this.$body[0].removeChild(scrollDiv);
+    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;     // 计算宽度差
+    this.$body[0].removeChild(scrollDiv);     // 清理测量元素
     return scrollbarWidth
   };
 
@@ -1539,20 +1606,26 @@ if (typeof jQuery === 'undefined') {
   // MODAL PLUGIN DEFINITION
   // =======================
 
+  // 插件主函数
   function Plugin(option, _relatedTarget) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.modal');
-      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option);
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.modal');     // 从数据缓存获取实例
+      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option);      // 合并配置
 
+      // 如果没有初始化过，创建新实例并缓存
       if (!data) $this.data('bs.modal', (data = new Modal(this, options)));
+      // 如果option是字符串，调用对应方法
       if (typeof option == 'string') data[option](_relatedTarget);
+      // 如果配置了show，立即显示模态框
       else if (options.show) data.show(_relatedTarget)
     })
   }
 
+  // 保存旧的$.fn.modal引用
   var old = $.fn.modal;
 
+  // 注册jQuery插件
   $.fn.modal             = Plugin;
   $.fn.modal.Constructor = Modal;
 
@@ -1560,33 +1633,39 @@ if (typeof jQuery === 'undefined') {
   // MODAL NO CONFLICT
   // =================
 
+  // 解决命名冲突
   $.fn.modal.noConflict = function () {
-    $.fn.modal = old;
-    return this
+    $.fn.modal = old;     // 恢复原来的$.fn.modal
+    return this     // 返回当前插件
   };
 
 
   // MODAL DATA-API
   // ==============
 
+  //7. 数据API自动初始化
   $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
     var $this   = $(this);
     var href    = $this.attr('href');
+    // 解析目标模态框
     var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))); // strip for ie7
+    // 构建选项：如果已有实例则切换，否则初始化
     var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data());
 
-    if ($this.is('a')) e.preventDefault();
+    if ($this.is('a')) e.preventDefault();      // 阻止链接跳转
 
+    // 焦点恢复：模态框关闭后将焦点返回到触发元素
     $target.one('show.bs.modal', function (showEvent) {
       if (showEvent.isDefaultPrevented()) return; // only register focus restorer if modal will actually get shown
       $target.one('hidden.bs.modal', function () {
         $this.is(':visible') && $this.trigger('focus')
       })
     });
-    Plugin.call($target, option, this)
+    Plugin.call($target, option, this)      // 调用插件
   })
 
 }(jQuery);
+//模块七展示了如何构建一个企业级的模态框组件，特别注重用户体验、可访问性和浏览器兼容性。
 
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.7
