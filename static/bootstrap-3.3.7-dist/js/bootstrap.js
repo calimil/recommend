@@ -1011,158 +1011,228 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块六：Dropdown（下拉菜单）
 +function ($) {
   'use strict';
 
   // DROPDOWN CLASS DEFINITION
   // =========================
 
-  var backdrop = '.dropdown-backdrop';
-  var toggle   = '[data-toggle="dropdown"]';
+  //1. 下拉菜单类定义与常量
+  var backdrop = '.dropdown-backdrop';      // 下拉菜单背景层选择器
+  var toggle   = '[data-toggle="dropdown"]';      // 下拉菜单触发器选择器
   var Dropdown = function (element) {
+    // 为元素绑定点击事件，使用命名空间避免冲突
     $(element).on('click.bs.dropdown', this.toggle)
   };
 
-  Dropdown.VERSION = '3.3.7';
+  Dropdown.VERSION = '3.3.7';     // 组件版本号
 
+  //2. 核心辅助函数
   function getParent($this) {
+    // 获取下拉菜单的目标父容器
     var selector = $this.attr('data-target');
 
     if (!selector) {
+      // 如果没有data-target，尝试从href属性获取
       selector = $this.attr('href');
+      // 验证并清理href，确保是有效的ID选择器（处理IE7兼容性）
       selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
     }
 
-    var $parent = selector && $(selector);
+    var $parent = selector && $(selector);      // 转换为jQuery对象
 
+    // 返回找到的父容器，如果没找到则返回直接父元素
     return $parent && $parent.length ? $parent : $this.parent()
   }
+  //（总结）getParent函数作用：
+  //     支持两种目标定位方式：data-target 和 href
+  //     提供回退机制，确保总能找到有效的父容器
+  //     处理IE7的href兼容性问题
 
   function clearMenus(e) {
+    // 如果是鼠标右键点击（which === 3），不关闭菜单
     if (e && e.which === 3) return;
+
+    // 移除所有下拉菜单背景层
     $(backdrop).remove();
+
+    // 遍历所有下拉菜单触发器
     $(toggle).each(function () {
       var $this         = $(this);
-      var $parent       = getParent($this);
-      var relatedTarget = { relatedTarget: this };
+      var $parent       = getParent($this);     // 获取对应的下拉菜单容器
+      var relatedTarget = { relatedTarget: this };      // 事件相关目标
 
+      // 如果下拉菜单已经是关闭状态，跳过处理
       if (!$parent.hasClass('open')) return;
 
+      // 特殊处理：如果点击发生在输入框内且输入框在下拉菜单内，不关闭菜单
       if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return;
 
+      // 触发隐藏前事件，允许取消
       $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget));
 
+      // 如果事件被阻止，停止执行
       if (e.isDefaultPrevented()) return;
 
+      // 更新无障碍访问属性
       $this.attr('aria-expanded', 'false');
+      // 关闭下拉菜单并触发隐藏完成事件
       $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
     })
   }
+  // （总结）clearMenus函数核心功能：
+  //     全局菜单管理：关闭所有打开的下拉菜单
+  //     右键保护：防止右键点击意外关闭菜单
+  //     输入框保护：在菜单内的输入框中点击不关闭菜单
+  //     事件系统：提供完整的隐藏生命周期事件
+  //     无障碍支持：正确更新ARIA属性
 
+  //3. 下拉菜单原型方法
   Dropdown.prototype.toggle = function (e) {
     var $this = $(this);
 
+    // 如果触发器被禁用，直接返回
     if ($this.is('.disabled, :disabled')) return;
 
-    var $parent  = getParent($this);
-    var isActive = $parent.hasClass('open');
+    var $parent  = getParent($this);      // 获取下拉菜单容器
+    var isActive = $parent.hasClass('open');      // 检查当前是否已打开
 
+    // 先关闭所有其他打开的下拉菜单
     clearMenus();
+    // （总结）toggle方法初始逻辑：
+    //   禁用状态检查，提高用户体验
+    //   获取正确的菜单容器
+    //   清理其他菜单，确保同时只有一个菜单打开
 
     if (!isActive) {
+      // 移动端处理：添加背景层（因为点击事件在移动端不会冒泡）
       if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
         // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
+        $(document.createElement('div'))      
+          .addClass('dropdown-backdrop')      // 添加背景层类
+          .insertAfter($(this))     // 插入到触发器后面
+          .on('click', clearMenus)      // 点击背景层关闭所有菜单
       }
 
       var relatedTarget = { relatedTarget: this };
+      // 触发展开前事件
       $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget));
 
-      if (e.isDefaultPrevented()) return;
+      if (e.isDefaultPrevented()) return;     // 如果事件被取消，停止执行
 
+      // 聚焦触发器并更新无障碍属性
       $this
         .trigger('focus')
         .attr('aria-expanded', 'true');
 
-      $parent
+      // 打开下拉菜单并触发展开完成事件
+        $parent
         .toggleClass('open')
         .trigger($.Event('shown.bs.dropdown', relatedTarget))
     }
 
-    return false
+    return false      // 阻止默认行为和事件冒泡
   };
+  // （总结）toggle方法展开逻辑：
+  //     移动端适配：使用背景层解决触摸事件冒泡问题
+  //     导航栏例外：导航栏内的下拉菜单不使用背景层
+  //     事件生命周期：show.bs.dropdown → 展开 → shown.bs.dropdown
+  //     无障碍支持：正确管理焦点和ARIA属性
 
   Dropdown.prototype.keydown = function (e) {
+    // 只处理特定按键（上、下、ESC、空格）且不在输入框中
     if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return;
 
     var $this = $(this);
 
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault();     // 阻止默认行为
+    e.stopPropagation();      // 停止事件传播
 
+    // 禁用状态检查
     if ($this.is('.disabled, :disabled')) return;
 
     var $parent  = getParent($this);
     var isActive = $parent.hasClass('open');
+    // （总结）键盘导航初始处理：
+    //   按键过滤：只处理方向键、ESC键、空格键
+    //   输入框排除：在输入框中不处理这些按键
+    //   事件控制：阻止默认行为和冒泡
 
+    // ESC键处理：关闭已打开的菜单，或打开未打开的菜单
     if (!isActive && e.which != 27 || isActive && e.which == 27) {
-      if (e.which == 27) $parent.find(toggle).trigger('focus');
-      return $this.trigger('click')
+      if (e.which == 27) $parent.find(toggle).trigger('focus');     // ESC键时聚焦触发器
+      return $this.trigger('click')     // 模拟点击事件
     }
 
-    var desc = ' li:not(.disabled):visible a';
+    // 获取所有可用的菜单项
+    var desc = ' li:not(.disabled):visible a';      // 选择器：非禁用、可见的链接
     var $items = $parent.find('.dropdown-menu' + desc);
 
-    if (!$items.length) return;
+    if (!$items.length) return;     // 如果没有菜单项，直接返回
 
-    var index = $items.index(e.target);
+    var index = $items.index(e.target);     // 获取当前焦点项的索引
 
+    // 键盘导航逻辑
     if (e.which == 38 && index > 0)                 index--;         // up
+    // 上箭头：向上移动
     if (e.which == 40 && index < $items.length - 1) index++;         // down
+    // 下箭头：向下移动
     if (!~index)                                    index = 0;
+    // 如果没有选中项，选择第一个
 
-    $items.eq(index).trigger('focus')
+    $items.eq(index).trigger('focus')     // 聚焦到目标菜单项
   };
-
+  // （总结）键盘导航详细逻辑：
+  //     ESC键智能处理：关闭打开菜单或打开关闭菜单
+  //     焦点管理：ESC键时正确返回焦点到触发器
+  //     菜单项遍历：支持上下箭头在菜单项间导航
+  //     边界处理：在第一个和最后一个菜单项处停止
+  //     禁用项跳过：自动跳过被禁用的菜单项
 
   // DROPDOWN PLUGIN DEFINITION
   // ==========================
 
+  //4. jQuery插件定义
   function Plugin(option) {
     return this.each(function () {
       var $this = $(this);
       var data  = $this.data('bs.dropdown');
 
+      // 单例模式：确保每个元素只有一个Dropdown实例
       if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)));
-      if (typeof option == 'string') data[option].call($this)
+      if (typeof option == 'string') data[option].call($this)     // 调用指定方法
     })
   }
 
-  var old = $.fn.dropdown;
+  var old = $.fn.dropdown;      // 保存原有dropdown方法
 
-  $.fn.dropdown             = Plugin;
-  $.fn.dropdown.Constructor = Dropdown;
+  $.fn.dropdown             = Plugin;     // 定义jQuery插件
+  $.fn.dropdown.Constructor = Dropdown;     // 暴露构造函数
 
 
   // DROPDOWN NO CONFLICT
   // ====================
 
+  // 防冲突方法
   $.fn.dropdown.noConflict = function () {
-    $.fn.dropdown = old;
-    return this
+    $.fn.dropdown = old;      // 恢复原有dropdown方法
+    return this     // 返回当前插件实例
   };
 
 
   // APPLY TO STANDARD DROPDOWN ELEMENTS
   // ===================================
 
+  //5. 数据API自动初始化
   $(document)
+  // 点击页面任意位置关闭所有下拉菜单
     .on('click.bs.dropdown.data-api', clearMenus)
+    // 阻止下拉菜单内表单的点击事件冒泡（防止意外关闭菜单）
     .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+    // 为所有下拉菜单触发器绑定点击事件
     .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+    // 为触发器和菜单绑定键盘事件
     .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
     .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
 
