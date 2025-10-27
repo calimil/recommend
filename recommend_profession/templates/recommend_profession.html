@@ -12,40 +12,50 @@
 
 
 <script type="text/javascript">
+// 定义页面刷新函数：延迟500毫秒后强制刷新当前页面
 function reload() {
     setTimeout(function(){
+        //true表示强制从服务器重新加载，不使用缓存
         location.reload(true);
-    }, 500);
+    }, 500);    // 延迟500毫秒执行刷新
 }
 </script>
 <script>
+        // 根据专业类别（x）动态生成该类别下的专业列表HTML
         function getProfessionDetail(x)
         {
+            // 获取后端传递的专业数据（pro_js是后端变量，通过|safe过滤器确保HTML安全解析）
             var y = {{ pro_js|safe }};
+            // 初始化HTML字符串：包含类别标题和表格结构（使用Bootstrap表格样式）
             var message = '<h4>'+x+'</h4></br>' +
                 '<table class="table table-bordered table-hover table-striped" width="600px">';
-            var count = 0;
-            const col = 3;
-            for (var i = 0; i < y.length; i++) {
-                if(y[i]['fields']['type1'] === x){
+            var count = 0;  // 计数变量：用于控制表格每行显示的专业数量
+            const col = 3;  // 定义表格每行显示3个专业
+            // 遍历所有专业数据，筛选出属于当前类别（x）的专业
+            for (var i = 0; i < y.length; i++) {    
+                if(y[i]['fields']['type1'] === x){  // 匹配专业类别
                     {#console.log(count, count%2)#}
+                    // 每满col个专业，新增一行表格
                     if(count%col === 0){
                         message = message + '<tr height="30px">';
+                        // 拼接专业链接：点击后调用reload()刷新页面，跳转至专业详情页
                         message = message + '<td><a onclick="reload()" target="_blank" href="../profession/'+y[i]['fields']['profession_name']+'专业">'
                     +y[i]['fields']['profession_name'] + '</a></td>';
                     }
                     else {
+                        // 非行首时直接拼接专业链接
                         message = message + '<td><a onclick="reload()" target="_blank" href="../profession/'+y[i]['fields']['profession_name']+'专业">'
                     +y[i]['fields']['profession_name'] + '</a></td>';
                     }
+                    // 每满col个专业，结束当前行
                     if(count%col === col-1){
                         message = message+'</tr>';
                     }
-                    count++;
+                    count++;    // 计数递增
                     {#console.log(y[i]['fields']['type1']);#}
                 }
             }
-
+            // 将生成的HTML插入到页面id为"profession_message"的容器中
             let div = document.getElementById('profession_message');
             div.innerHTML = message;
 
