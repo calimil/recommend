@@ -3,16 +3,28 @@
  * Copyright 2011-2016 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
+
+/*
+ * 按钮样式定义部分
+ * 定义了默认、主要、成功、信息、警告、危险六种按钮的基础样式
+ */
 .btn-default,
 .btn-primary,
 .btn-success,
 .btn-info,
 .btn-warning,
 .btn-danger {
+  /* 添加文字阴影效果，增强视觉层次感 */
   text-shadow: 0 -1px 0 rgba(0, 0, 0, .2);
+  /* 添加内阴影和外阴影，创造立体感 */
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 1px rgba(0, 0, 0, .075);
 }
+
+/*
+ * 按钮激活状态样式
+ * 定义按钮被按下时的样式变化
+ */
 .btn-default:active,
 .btn-primary:active,
 .btn-success:active,
@@ -25,9 +37,15 @@
 .btn-info.active,
 .btn-warning.active,
 .btn-danger.active {
+  /* 更深的内阴影，增强按下效果 */
   -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
-          box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
 }
+
+/*
+ * 按钮禁用状态样式
+ * 定义按钮不可用时的样式
+ */
 .btn-default.disabled,
 .btn-primary.disabled,
 .btn-success.disabled,
@@ -46,43 +64,85 @@ fieldset[disabled] .btn-success,
 fieldset[disabled] .btn-info,
 fieldset[disabled] .btn-warning,
 fieldset[disabled] .btn-danger {
+  /* 移除阴影效果 */
   -webkit-box-shadow: none;
-          box-shadow: none;
+  box-shadow: none;
 }
+
+/*
+ * 按钮徽章样式
+ * 定义按钮上徽章的特殊样式
+ */
 .btn-default .badge,
 .btn-primary .badge,
 .btn-success .badge,
 .btn-info .badge,
 .btn-warning .badge,
 .btn-danger .badge {
+  /* 移除文字阴影 */
   text-shadow: none;
 }
+
+/*
+ * 按钮活动状态通用样式
+ * 定义按钮按下时背景图像的变化
+ */
 .btn:active,
 .btn.active {
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 默认按钮样式详细定义
+ * 定义默认按钮的各种视觉属性
+ */
 .btn-default {
+  /* 文字阴影，增强可读性 */
   text-shadow: 0 1px 0 #fff;
+  /* 渐变背景色，从白色到浅灰色 */
   background-image: -webkit-linear-gradient(top, #fff 0%, #e0e0e0 100%);
-  background-image:      -o-linear-gradient(top, #fff 0%, #e0e0e0 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, #e0e0e0 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#e0e0e0));
-  background-image:         linear-gradient(to bottom, #fff 0%, #e0e0e0 100%);
+  background-image: linear-gradient(to bottom, #fff 0%, #e0e0e0 100%);
+  /* IE滤镜支持渐变 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe0e0e0', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复模式 */
   background-repeat: repeat-x;
+  /* 边框颜色定义 */
   border-color: #dbdbdb;
   border-color: #ccc;
 }
+
+/*
+ * 默认按钮悬停和焦点状态
+ * 定义鼠标悬停和获得焦点时的样式变化
+ */
 .btn-default:hover,
 .btn-default:focus {
+  /* 改变背景色 */
   background-color: #e0e0e0;
+  /* 调整背景位置，创造按下效果 */
   background-position: 0 -15px;
 }
+
+/*
+ * 默认按钮激活状态
+ * 定义按钮被按下时的具体样式
+ */
 .btn-default:active,
 .btn-default.active {
+  /* 设置激活状态背景色 */
   background-color: #e0e0e0;
+  /* 设置边框颜色 */
   border-color: #dbdbdb;
 }
+
+/*
+ * 默认按钮各种禁用状态
+ * 定义多种情况下的禁用样式
+ */
 .btn-default.disabled,
 .btn-default[disabled],
 fieldset[disabled] .btn-default,
@@ -101,29 +161,59 @@ fieldset[disabled] .btn-default:active,
 .btn-default.disabled.active,
 .btn-default[disabled].active,
 fieldset[disabled] .btn-default.active {
+  /* 统一设置禁用状态背景色 */
   background-color: #e0e0e0;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 主要按钮样式定义
+ * 定义具有重要操作含义的主要按钮样式
+ */
 .btn-primary {
+  /* 蓝色渐变背景，从深蓝到浅蓝 */
   background-image: -webkit-linear-gradient(top, #337ab7 0%, #265a88 100%);
-  background-image:      -o-linear-gradient(top, #337ab7 0%, #265a88 100%);
+  background-image: -o-linear-gradient(top, #337ab7 0%, #265a88 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#265a88));
-  background-image:         linear-gradient(to bottom, #337ab7 0%, #265a88 100%);
+  background-image: linear-gradient(to bottom, #337ab7 0%, #265a88 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff265a88', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #245580;
 }
+
+/*
+ * 主要按钮悬停和焦点状态
+ * 定义交互反馈效果
+ */
 .btn-primary:hover,
 .btn-primary:focus {
+  /* 调整背景色 */
   background-color: #265a88;
+  /* 调整背景位置 */
   background-position: 0 -15px;
 }
+
+/*
+ * 主要按钮激活状态
+ * 定义按下时的效果
+ */
 .btn-primary:active,
 .btn-primary.active {
+  /* 设置激活状态背景色 */
   background-color: #265a88;
+  /* 设置边框颜色 */
   border-color: #245580;
 }
+
+/*
+ * 主要按钮各种禁用状态
+ * 定义不可用时的统一表现
+ */
 .btn-primary.disabled,
 .btn-primary[disabled],
 fieldset[disabled] .btn-primary,
@@ -142,29 +232,59 @@ fieldset[disabled] .btn-primary:active,
 .btn-primary.disabled.active,
 .btn-primary[disabled].active,
 fieldset[disabled] .btn-primary.active {
+  /* 设置禁用状态背景色 */
   background-color: #265a88;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 成功按钮样式定义
+ * 定义表示成功操作的绿色按钮
+ */
 .btn-success {
+  /* 绿色渐变背景，从浅绿到深绿 */
   background-image: -webkit-linear-gradient(top, #5cb85c 0%, #419641 100%);
-  background-image:      -o-linear-gradient(top, #5cb85c 0%, #419641 100%);
+  background-image: -o-linear-gradient(top, #5cb85c 0%, #419641 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#5cb85c), to(#419641));
-  background-image:         linear-gradient(to bottom, #5cb85c 0%, #419641 100%);
+  background-image: linear-gradient(to bottom, #5cb85c 0%, #419641 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5cb85c', endColorstr='#ff419641', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #3e8f3e;
 }
+
+/*
+ * 成功按钮悬停和焦点状态
+ * 定义交互反馈效果
+ */
 .btn-success:hover,
 .btn-success:focus {
+  /* 调整背景色 */
   background-color: #419641;
+  /* 调整背景位置 */
   background-position: 0 -15px;
 }
+
+/*
+ * 成功按钮激活状态
+ * 定义按下时的效果
+ */
 .btn-success:active,
 .btn-success.active {
+  /* 设置激活状态背景色 */
   background-color: #419641;
+  /* 设置边框颜色 */
   border-color: #3e8f3e;
 }
+
+/*
+ * 成功按钮各种禁用状态
+ * 定义不可用时的表现
+ */
 .btn-success.disabled,
 .btn-success[disabled],
 fieldset[disabled] .btn-success,
@@ -183,29 +303,59 @@ fieldset[disabled] .btn-success:active,
 .btn-success.disabled.active,
 .btn-success[disabled].active,
 fieldset[disabled] .btn-success.active {
+  /* 设置禁用状态背景色 */
   background-color: #419641;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 信息按钮样式定义
+ * 定义提供信息操作的蓝色按钮
+ */
 .btn-info {
+  /* 蓝色渐变背景，从浅蓝到深蓝 */
   background-image: -webkit-linear-gradient(top, #5bc0de 0%, #2aabd2 100%);
-  background-image:      -o-linear-gradient(top, #5bc0de 0%, #2aabd2 100%);
+  background-image: -o-linear-gradient(top, #5bc0de 0%, #2aabd2 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#5bc0de), to(#2aabd2));
-  background-image:         linear-gradient(to bottom, #5bc0de 0%, #2aabd2 100%);
+  background-image: linear-gradient(to bottom, #5bc0de 0%, #2aabd2 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5bc0de', endColorstr='#ff2aabd2', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #28a4c9;
 }
+
+/*
+ * 信息按钮悬停和焦点状态
+ * 定义交互反馈效果
+ */
 .btn-info:hover,
 .btn-info:focus {
+  /* 调整背景色 */
   background-color: #2aabd2;
+  /* 调整背景位置 */
   background-position: 0 -15px;
 }
+
+/*
+ * 信息按钮激活状态
+ * 定义按下时的效果
+ */
 .btn-info:active,
 .btn-info.active {
+  /* 设置激活状态背景色 */
   background-color: #2aabd2;
+  /* 设置边框颜色 */
   border-color: #28a4c9;
 }
+
+/*
+ * 信息按钮各种禁用状态
+ * 定义不可用时的表现
+ */
 .btn-info.disabled,
 .btn-info[disabled],
 fieldset[disabled] .btn-info,
@@ -224,29 +374,59 @@ fieldset[disabled] .btn-info:active,
 .btn-info.disabled.active,
 .btn-info[disabled].active,
 fieldset[disabled] .btn-info.active {
+  /* 设置禁用状态背景色 */
   background-color: #2aabd2;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 警告按钮样式定义
+ * 定义警告操作的橙色按钮
+ */
 .btn-warning {
+  /* 橙色渐变背景，从浅橙到深橙 */
   background-image: -webkit-linear-gradient(top, #f0ad4e 0%, #eb9316 100%);
-  background-image:      -o-linear-gradient(top, #f0ad4e 0%, #eb9316 100%);
+  background-image: -o-linear-gradient(top, #f0ad4e 0%, #eb9316 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f0ad4e), to(#eb9316));
-  background-image:         linear-gradient(to bottom, #f0ad4e 0%, #eb9316 100%);
+  background-image: linear-gradient(to bottom, #f0ad4e 0%, #eb9316 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff0ad4e', endColorstr='#ffeb9316', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #e38d13;
 }
+
+/*
+ * 警告按钮悬停和焦点状态
+ * 定义交互反馈效果
+ */
 .btn-warning:hover,
 .btn-warning:focus {
+  /* 调整背景色 */
   background-color: #eb9316;
+  /* 调整背景位置 */
   background-position: 0 -15px;
 }
+
+/*
+ * 警告按钮激活状态
+ * 定义按下时的效果
+ */
 .btn-warning:active,
 .btn-warning.active {
+  /* 设置激活状态背景色 */
   background-color: #eb9316;
+  /* 设置边框颜色 */
   border-color: #e38d13;
 }
+
+/*
+ * 警告按钮各种禁用状态
+ * 定义不可用时的表现
+ */
 .btn-warning.disabled,
 .btn-warning[disabled],
 fieldset[disabled] .btn-warning,
@@ -265,29 +445,59 @@ fieldset[disabled] .btn-warning:active,
 .btn-warning.disabled.active,
 .btn-warning[disabled].active,
 fieldset[disabled] .btn-warning.active {
+  /* 设置禁用状态背景色 */
   background-color: #eb9316;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 危险按钮样式定义
+ * 定义危险操作的红色按钮
+ */
 .btn-danger {
+  /* 红色渐变背景，从浅红到深红 */
   background-image: -webkit-linear-gradient(top, #d9534f 0%, #c12e2a 100%);
-  background-image:      -o-linear-gradient(top, #d9534f 0%, #c12e2a 100%);
+  background-image: -o-linear-gradient(top, #d9534f 0%, #c12e2a 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#d9534f), to(#c12e2a));
-  background-image:         linear-gradient(to bottom, #d9534f 0%, #c12e2a 100%);
+  background-image: linear-gradient(to bottom, #d9534f 0%, #c12e2a 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd9534f', endColorstr='#ffc12e2a', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #b92c28;
 }
+
+/*
+ * 危险按钮悬停和焦点状态
+ * 定义交互反馈效果
+ */
 .btn-danger:hover,
 .btn-danger:focus {
+  /* 调整背景色 */
   background-color: #c12e2a;
+  /* 调整背景位置 */
   background-position: 0 -15px;
 }
+
+/*
+ * 危险按钮激活状态
+ * 定义按下时的效果
+ */
 .btn-danger:active,
 .btn-danger.active {
+  /* 设置激活状态背景色 */
   background-color: #c12e2a;
+  /* 设置边框颜色 */
   border-color: #b92c28;
 }
+
+/*
+ * 危险按钮各种禁用状态
+ * 定义不可用时的表现
+ */
 .btn-danger.disabled,
 .btn-danger[disabled],
 fieldset[disabled] .btn-danger,
@@ -306,282 +516,558 @@ fieldset[disabled] .btn-danger:active,
 .btn-danger.disabled.active,
 .btn-danger[disabled].active,
 fieldset[disabled] .btn-danger.active {
+  /* 设置禁用状态背景色 */
   background-color: #c12e2a;
+  /* 移除背景图像 */
   background-image: none;
 }
+
+/*
+ * 缩略图和图像缩略图样式
+ * 定义图片容器的阴影效果
+ */
 .thumbnail,
 .img-thumbnail {
+  /* 添加轻微阴影，增强立体感 */
   -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
 }
-.dropdown-menu > li > a:hover,
-.dropdown-menu > li > a:focus {
+
+/*
+ * 下拉菜单项悬停状态
+ * 定义下拉菜单项鼠标悬停时的样式
+ */
+.dropdown-menu>li>a:hover,
+.dropdown-menu>li>a:focus {
+  /* 设置背景色 */
   background-color: #e8e8e8;
+  /* 浅灰到深灰的渐变背景 */
   background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
-  background-image:      -o-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
+  background-image: -o-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#e8e8e8));
-  background-image:         linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+  background-image: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.dropdown-menu > .active > a,
-.dropdown-menu > .active > a:hover,
-.dropdown-menu > .active > a:focus {
+
+/*
+ * 下拉菜单激活项样式
+ * 定义当前选中菜单项的样式
+ */
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:hover,
+.dropdown-menu>.active>a:focus {
+  /* 设置背景色 */
   background-color: #2e6da4;
+  /* 蓝色渐变背景 */
   background-image: -webkit-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
-  background-image:      -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
+  background-image: -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#2e6da4));
-  background-image:         linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+  background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff2e6da4', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 默认导航栏样式
+ * 定义网站顶部导航栏的基本外观
+ */
 .navbar-default {
+  /* 白色到浅灰的渐变背景 */
   background-image: -webkit-linear-gradient(top, #fff 0%, #f8f8f8 100%);
-  background-image:      -o-linear-gradient(top, #fff 0%, #f8f8f8 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, #f8f8f8 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#f8f8f8));
-  background-image:         linear-gradient(to bottom, #fff 0%, #f8f8f8 100%);
+  background-image: linear-gradient(to bottom, #fff 0%, #f8f8f8 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#fff8f8f8', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 圆角效果 */
   border-radius: 4px;
+  /* 内外阴影效果 */
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 5px rgba(0, 0, 0, .075);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 5px rgba(0, 0, 0, .075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), 0 1px 5px rgba(0, 0, 0, .075);
 }
-.navbar-default .navbar-nav > .open > a,
-.navbar-default .navbar-nav > .active > a {
+
+/*
+ * 默认导航栏激活和打开状态项
+ * 定义导航栏中当前页面或打开下拉菜单项的样式
+ */
+.navbar-default .navbar-nav>.open>a,
+.navbar-default .navbar-nav>.active>a {
+  /* 灰色渐变背景 */
   background-image: -webkit-linear-gradient(top, #dbdbdb 0%, #e2e2e2 100%);
-  background-image:      -o-linear-gradient(top, #dbdbdb 0%, #e2e2e2 100%);
+  background-image: -o-linear-gradient(top, #dbdbdb 0%, #e2e2e2 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#dbdbdb), to(#e2e2e2));
-  background-image:         linear-gradient(to bottom, #dbdbdb 0%, #e2e2e2 100%);
+  background-image: linear-gradient(to bottom, #dbdbdb 0%, #e2e2e2 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffdbdbdb', endColorstr='#ffe2e2e2', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 内阴影效果 */
   -webkit-box-shadow: inset 0 3px 9px rgba(0, 0, 0, .075);
-          box-shadow: inset 0 3px 9px rgba(0, 0, 0, .075);
+  box-shadow: inset 0 3px 9px rgba(0, 0, 0, .075);
 }
+
+/*
+ * 导航栏品牌和链接文字阴影
+ * 增强导航栏文字的可读性
+ */
 .navbar-brand,
-.navbar-nav > li > a {
+.navbar-nav>li>a {
+  /* 添加文字阴影 */
   text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
 }
+
+/*
+ * 反色导航栏样式
+ * 定义深色主题的导航栏
+ */
 .navbar-inverse {
+  /* 深灰到黑色的渐变背景 */
   background-image: -webkit-linear-gradient(top, #3c3c3c 0%, #222 100%);
-  background-image:      -o-linear-gradient(top, #3c3c3c 0%, #222 100%);
+  background-image: -o-linear-gradient(top, #3c3c3c 0%, #222 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#3c3c3c), to(#222));
-  background-image:         linear-gradient(to bottom, #3c3c3c 0%, #222 100%);
+  background-image: linear-gradient(to bottom, #3c3c3c 0%, #222 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff3c3c3c', endColorstr='#ff222222', GradientType=0);
-  filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 圆角效果 */
   border-radius: 4px;
 }
-.navbar-inverse .navbar-nav > .open > a,
-.navbar-inverse .navbar-nav > .active > a {
+
+/*
+ * 反色导航栏激活和打开状态项
+ * 定义深色主题导航栏中激活项的样式
+ */
+.navbar-inverse .navbar-nav>.open>a,
+.navbar-inverse .navbar-nav>.active>a {
+  /* 黑色渐变背景 */
   background-image: -webkit-linear-gradient(top, #080808 0%, #0f0f0f 100%);
-  background-image:      -o-linear-gradient(top, #080808 0%, #0f0f0f 100%);
+  background-image: -o-linear-gradient(top, #080808 0%, #0f0f0f 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#080808), to(#0f0f0f));
-  background-image:         linear-gradient(to bottom, #080808 0%, #0f0f0f 100%);
+  background-image: linear-gradient(to bottom, #080808 0%, #0f0f0f 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff080808', endColorstr='#ff0f0f0f', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 内阴影效果 */
   -webkit-box-shadow: inset 0 3px 9px rgba(0, 0, 0, .25);
-          box-shadow: inset 0 3px 9px rgba(0, 0, 0, .25);
+  box-shadow: inset 0 3px 9px rgba(0, 0, 0, .25);
 }
+
+/*
+ * 反色导航栏文字阴影
+ * 增强深色背景下文字的可读性
+ */
 .navbar-inverse .navbar-brand,
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .navbar-nav>li>a {
+  /* 添加反向文字阴影 */
   text-shadow: 0 -1px 0 rgba(0, 0, 0, .25);
 }
+
+/*
+ * 静态和固定导航栏圆角处理
+ * 移除特定导航栏的圆角效果
+ */
 .navbar-static-top,
 .navbar-fixed-top,
 .navbar-fixed-bottom {
+  /* 无圆角 */
   border-radius: 0;
 }
+
+/*
+ * 小屏幕设备下拉菜单激活项样式
+ * 定义移动端下拉菜单激活项的特殊样式
+ */
 @media (max-width: 767px) {
-  .navbar .navbar-nav .open .dropdown-menu > .active > a,
-  .navbar .navbar-nav .open .dropdown-menu > .active > a:hover,
-  .navbar .navbar-nav .open .dropdown-menu > .active > a:focus {
+
+  .navbar .navbar-nav .open .dropdown-menu>.active>a,
+  .navbar .navbar-nav .open .dropdown-menu>.active>a:hover,
+  .navbar .navbar-nav .open .dropdown-menu>.active>a:focus {
+    /* 白色文字 */
     color: #fff;
+    /* 蓝色渐变背景 */
     background-image: -webkit-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
-    background-image:      -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
+    background-image: -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
     background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#2e6da4));
-    background-image:         linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+    background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+    /* IE滤镜支持 */
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff2e6da4', GradientType=0);
+    /* 背景重复 */
     background-repeat: repeat-x;
   }
 }
+
+/*
+ * 警告框基础样式
+ * 定义各种警告框的通用样式
+ */
 .alert {
+  /* 文字阴影增强可读性 */
   text-shadow: 0 1px 0 rgba(255, 255, 255, .2);
+  /* 内外阴影效果 */
   -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 1px 2px rgba(0, 0, 0, .05);
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 1px 2px rgba(0, 0, 0, .05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 1px 2px rgba(0, 0, 0, .05);
 }
+
+/*
+ * 成功警告框样式
+ * 定义表示成功信息的绿色警告框
+ */
 .alert-success {
+  /* 浅绿到中绿的渐变背景 */
   background-image: -webkit-linear-gradient(top, #dff0d8 0%, #c8e5bc 100%);
-  background-image:      -o-linear-gradient(top, #dff0d8 0%, #c8e5bc 100%);
+  background-image: -o-linear-gradient(top, #dff0d8 0%, #c8e5bc 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#dff0d8), to(#c8e5bc));
-  background-image:         linear-gradient(to bottom, #dff0d8 0%, #c8e5bc 100%);
+  background-image: linear-gradient(to bottom, #dff0d8 0%, #c8e5bc 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffdff0d8', endColorstr='#ffc8e5bc', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #b2dba1;
 }
+
+/*
+ * 信息警告框样式
+ * 定义表示提示信息的蓝色警告框
+ */
 .alert-info {
+  /* 浅蓝到中蓝的渐变背景 */
   background-image: -webkit-linear-gradient(top, #d9edf7 0%, #b9def0 100%);
-  background-image:      -o-linear-gradient(top, #d9edf7 0%, #b9def0 100%);
+  background-image: -o-linear-gradient(top, #d9edf7 0%, #b9def0 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#d9edf7), to(#b9def0));
-  background-image:         linear-gradient(to bottom, #d9edf7 0%, #b9def0 100%);
+  background-image: linear-gradient(to bottom, #d9edf7 0%, #b9def0 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd9edf7', endColorstr='#ffb9def0', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #9acfea;
 }
+
+/*
+ * 警告警告框样式
+ * 定义表示警告信息的黄色警告框
+ */
 .alert-warning {
+  /* 浅黄到中黄的渐变背景 */
   background-image: -webkit-linear-gradient(top, #fcf8e3 0%, #f8efc0 100%);
-  background-image:      -o-linear-gradient(top, #fcf8e3 0%, #f8efc0 100%);
+  background-image: -o-linear-gradient(top, #fcf8e3 0%, #f8efc0 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#fcf8e3), to(#f8efc0));
-  background-image:         linear-gradient(to bottom, #fcf8e3 0%, #f8efc0 100%);
+  background-image: linear-gradient(to bottom, #fcf8e3 0%, #f8efc0 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fffcf8e3', endColorstr='#fff8efc0', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #f5e79e;
 }
+
+/*
+ * 危险警告框样式
+ * 定义表示危险信息的红色警告框
+ */
 .alert-danger {
+  /* 浅红到中红的渐变背景 */
   background-image: -webkit-linear-gradient(top, #f2dede 0%, #e7c3c3 100%);
-  background-image:      -o-linear-gradient(top, #f2dede 0%, #e7c3c3 100%);
+  background-image: -o-linear-gradient(top, #f2dede 0%, #e7c3c3 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f2dede), to(#e7c3c3));
-  background-image:         linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
+  background-image: linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff2dede', endColorstr='#ffe7c3c3', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #dca7a7;
 }
+
+/*
+ * 进度条容器样式
+ * 定义进度条背景的样式
+ */
 .progress {
+  /* 浅灰到白色的渐变背景 */
   background-image: -webkit-linear-gradient(top, #ebebeb 0%, #f5f5f5 100%);
-  background-image:      -o-linear-gradient(top, #ebebeb 0%, #f5f5f5 100%);
+  background-image: -o-linear-gradient(top, #ebebeb 0%, #f5f5f5 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#ebebeb), to(#f5f5f5));
-  background-image:         linear-gradient(to bottom, #ebebeb 0%, #f5f5f5 100%);
+  background-image: linear-gradient(to bottom, #ebebeb 0%, #f5f5f5 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffebebeb', endColorstr='#fff5f5f5', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 进度条样式
+ * 定义进度条前景的样式
+ */
 .progress-bar {
+  /* 蓝色渐变背景 */
   background-image: -webkit-linear-gradient(top, #337ab7 0%, #286090 100%);
-  background-image:      -o-linear-gradient(top, #337ab7 0%, #286090 100%);
+  background-image: -o-linear-gradient(top, #337ab7 0%, #286090 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#286090));
-  background-image:         linear-gradient(to bottom, #337ab7 0%, #286090 100%);
+  background-image: linear-gradient(to bottom, #337ab7 0%, #286090 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff286090', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 成功进度条样式
+ * 定义表示成功状态的绿色进度条
+ */
 .progress-bar-success {
+  /* 绿色渐变背景 */
   background-image: -webkit-linear-gradient(top, #5cb85c 0%, #449d44 100%);
-  background-image:      -o-linear-gradient(top, #5cb85c 0%, #449d44 100%);
+  background-image: -o-linear-gradient(top, #5cb85c 0%, #449d44 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#5cb85c), to(#449d44));
-  background-image:         linear-gradient(to bottom, #5cb85c 0%, #449d44 100%);
+  background-image: linear-gradient(to bottom, #5cb85c 0%, #449d44 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5cb85c', endColorstr='#ff449d44', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 信息进度条样式
+ * 定义表示信息状态的蓝色进度条
+ */
 .progress-bar-info {
+  /* 蓝色渐变背景 */
   background-image: -webkit-linear-gradient(top, #5bc0de 0%, #31b0d5 100%);
-  background-image:      -o-linear-gradient(top, #5bc0de 0%, #31b0d5 100%);
+  background-image: -o-linear-gradient(top, #5bc0de 0%, #31b0d5 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#5bc0de), to(#31b0d5));
-  background-image:         linear-gradient(to bottom, #5bc0de 0%, #31b0d5 100%);
+  background-image: linear-gradient(to bottom, #5bc0de 0%, #31b0d5 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5bc0de', endColorstr='#ff31b0d5', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 警告进度条样式
+ * 定义表示警告状态的橙色进度条
+ */
 .progress-bar-warning {
+  /* 橙色渐变背景 */
   background-image: -webkit-linear-gradient(top, #f0ad4e 0%, #ec971f 100%);
-  background-image:      -o-linear-gradient(top, #f0ad4e 0%, #ec971f 100%);
+  background-image: -o-linear-gradient(top, #f0ad4e 0%, #ec971f 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f0ad4e), to(#ec971f));
-  background-image:         linear-gradient(to bottom, #f0ad4e 0%, #ec971f 100%);
+  background-image: linear-gradient(to bottom, #f0ad4e 0%, #ec971f 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff0ad4e', endColorstr='#ffec971f', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 危险进度条样式
+ * 定义表示危险状态的红色进度条
+ */
 .progress-bar-danger {
+  /* 红色渐变背景 */
   background-image: -webkit-linear-gradient(top, #d9534f 0%, #c9302c 100%);
-  background-image:      -o-linear-gradient(top, #d9534f 0%, #c9302c 100%);
+  background-image: -o-linear-gradient(top, #d9534f 0%, #c9302c 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#d9534f), to(#c9302c));
-  background-image:         linear-gradient(to bottom, #d9534f 0%, #c9302c 100%);
+  background-image: linear-gradient(to bottom, #d9534f 0%, #c9302c 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd9534f', endColorstr='#ffc9302c', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * 条纹进度条样式
+ * 定义具有条纹效果的进度条背景
+ */
 .progress-bar-striped {
+  /* 45度角的条纹渐变背景 */
   background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
-  background-image:      -o-linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
-  background-image:         linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+  background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, .15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .15) 75%, transparent 75%, transparent);
 }
+
+/*
+ * 列表组样式
+ * 定义列表组的整体外观
+ */
 .list-group {
+  /* 圆角效果 */
   border-radius: 4px;
+  /* 添加阴影增强立体感 */
   -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .075);
 }
+
+/*
+ * 列表组激活项样式
+ * 定义列表组中激活项的样式
+ */
 .list-group-item.active,
 .list-group-item.active:hover,
 .list-group-item.active:focus {
+  /* 文字阴影 */
   text-shadow: 0 -1px 0 #286090;
+  /* 蓝色渐变背景 */
   background-image: -webkit-linear-gradient(top, #337ab7 0%, #2b669a 100%);
-  background-image:      -o-linear-gradient(top, #337ab7 0%, #2b669a 100%);
+  background-image: -o-linear-gradient(top, #337ab7 0%, #2b669a 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#2b669a));
-  background-image:         linear-gradient(to bottom, #337ab7 0%, #2b669a 100%);
+  background-image: linear-gradient(to bottom, #337ab7 0%, #2b669a 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff2b669a', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #2b669a;
 }
+
+/*
+ * 列表组激活项徽章样式
+ * 定义激活项中徽章的特殊样式
+ */
 .list-group-item.active .badge,
 .list-group-item.active:hover .badge,
 .list-group-item.active:focus .badge {
+  /* 移除文字阴影 */
   text-shadow: none;
 }
+
+/*
+ * 面板样式
+ * 定义面板组件的基础样式
+ */
 .panel {
+  /* 轻微阴影增强立体感 */
   -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
 }
-.panel-default > .panel-heading {
+
+/*
+ * 默认面板标题样式
+ * 定义默认面板标题区域的样式
+ */
+.panel-default>.panel-heading {
+  /* 浅灰到深灰的渐变背景 */
   background-image: -webkit-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
-  background-image:      -o-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
+  background-image: -o-linear-gradient(top, #f5f5f5 0%, #e8e8e8 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#e8e8e8));
-  background-image:         linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+  background-image: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.panel-primary > .panel-heading {
+
+/*
+ * 主要面板标题样式
+ * 定义主要面板标题区域的样式
+ */
+.panel-primary>.panel-heading {
+  /* 蓝色渐变背景 */
   background-image: -webkit-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
-  background-image:      -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
+  background-image: -o-linear-gradient(top, #337ab7 0%, #2e6da4 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#337ab7), to(#2e6da4));
-  background-image:         linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+  background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff337ab7', endColorstr='#ff2e6da4', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.panel-success > .panel-heading {
+
+/*
+ * 成功面板标题样式
+ * 定义成功面板标题区域的样式
+ */
+.panel-success>.panel-heading {
+  /* 浅绿到中绿的渐变背景 */
   background-image: -webkit-linear-gradient(top, #dff0d8 0%, #d0e9c6 100%);
-  background-image:      -o-linear-gradient(top, #dff0d8 0%, #d0e9c6 100%);
+  background-image: -o-linear-gradient(top, #dff0d8 0%, #d0e9c6 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#dff0d8), to(#d0e9c6));
-  background-image:         linear-gradient(to bottom, #dff0d8 0%, #d0e9c6 100%);
+  background-image: linear-gradient(to bottom, #dff0d8 0%, #d0e9c6 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffdff0d8', endColorstr='#ffd0e9c6', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.panel-info > .panel-heading {
+
+/*
+ * 信息面板标题样式
+ * 定义信息面板标题区域的样式
+ */
+.panel-info>.panel-heading {
+  /* 浅蓝到中蓝的渐变背景 */
   background-image: -webkit-linear-gradient(top, #d9edf7 0%, #c4e3f3 100%);
-  background-image:      -o-linear-gradient(top, #d9edf7 0%, #c4e3f3 100%);
+  background-image: -o-linear-gradient(top, #d9edf7 0%, #c4e3f3 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#d9edf7), to(#c4e3f3));
-  background-image:         linear-gradient(to bottom, #d9edf7 0%, #c4e3f3 100%);
+  background-image: linear-gradient(to bottom, #d9edf7 0%, #c4e3f3 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffd9edf7', endColorstr='#ffc4e3f3', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.panel-warning > .panel-heading {
+
+/*
+ * 警告面板标题样式
+ * 定义警告面板标题区域的样式
+ */
+.panel-warning>.panel-heading {
+  /* 浅黄到中黄的渐变背景 */
   background-image: -webkit-linear-gradient(top, #fcf8e3 0%, #faf2cc 100%);
-  background-image:      -o-linear-gradient(top, #fcf8e3 0%, #faf2cc 100%);
+  background-image: -o-linear-gradient(top, #fcf8e3 0%, #faf2cc 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#fcf8e3), to(#faf2cc));
-  background-image:         linear-gradient(to bottom, #fcf8e3 0%, #faf2cc 100%);
+  background-image: linear-gradient(to bottom, #fcf8e3 0%, #faf2cc 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fffcf8e3', endColorstr='#fffaf2cc', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
-.panel-danger > .panel-heading {
+
+/*
+ * 危险面板标题样式
+ * 定义危险面板标题区域的样式
+ */
+.panel-danger>.panel-heading {
+  /* 浅红到中红的渐变背景 */
   background-image: -webkit-linear-gradient(top, #f2dede 0%, #ebcccc 100%);
-  background-image:      -o-linear-gradient(top, #f2dede 0%, #ebcccc 100%);
+  background-image: -o-linear-gradient(top, #f2dede 0%, #ebcccc 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#f2dede), to(#ebcccc));
-  background-image:         linear-gradient(to bottom, #f2dede 0%, #ebcccc 100%);
+  background-image: linear-gradient(to bottom, #f2dede 0%, #ebcccc 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff2dede', endColorstr='#ffebcccc', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
 }
+
+/*
+ * wells组件样式
+ * 定义wells组件的视觉效果
+ */
 .well {
+  /* 深灰到浅灰的渐变背景 */
   background-image: -webkit-linear-gradient(top, #e8e8e8 0%, #f5f5f5 100%);
-  background-image:      -o-linear-gradient(top, #e8e8e8 0%, #f5f5f5 100%);
+  background-image: -o-linear-gradient(top, #e8e8e8 0%, #f5f5f5 100%);
   background-image: -webkit-gradient(linear, left top, left bottom, from(#e8e8e8), to(#f5f5f5));
-  background-image:         linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 100%);
+  background-image: linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 100%);
+  /* IE滤镜支持 */
   filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffe8e8e8', endColorstr='#fff5f5f5', GradientType=0);
+  /* 背景重复 */
   background-repeat: repeat-x;
+  /* 边框颜色 */
   border-color: #dcdcdc;
+  /* 内外阴影效果，创造凹陷感 */
   -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, .05), 0 1px 0 rgba(255, 255, 255, .1);
-          box-shadow: inset 0 1px 3px rgba(0, 0, 0, .05), 0 1px 0 rgba(255, 255, 255, .1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .05), 0 1px 0 rgba(255, 255, 255, .1);
 }
+
 /*# sourceMappingURL=bootstrap-theme.css.map */
