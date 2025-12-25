@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="text-center">{{ title }}</h2>
+
+            <!-- 筛选表单 -->
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <form class="form-inline" action="" method="post" novalidate>
+                        {% csrf_token %}
+                        {% for foo in trend_form %}
+                            <div class="form-group" style="margin-right: 15px; margin-bottom: 10px;">
+                                {{ foo.label }}：{{ foo }}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary">查询</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 图表展示 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="text-center">录取分数趋势图</h4>
+                </div>
+                <div class="panel-body">
+                    {% if not can_draw %}
+                        <div class="alert alert-warning text-center">
+                            请先填写【院校名称、专业名称、起止年份】后再查询趋势图
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            {% for epoch, data in chart_data_dict.items %}
+                            <div class="col-md-6">
+                                <div class="chart-container" style="position: relative; height:300px;">
+                                    <h5 class="text-center">{{ epoch }}</h5>
+                                    <canvas id="chart_{{ forloop.counter }}"></canvas>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 数据表格 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="text-center">详细数据</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>年份</th>
+                                    <th>专业名称</th>
+                                    <th>最高分</th>
+                                    <th>平均分</th>
+                                    <th>最低分</th>
+                                    <th>批次</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for year, data_list in years_data.items %}
+                                    {% for data in data_list %}
+                                    <tr>
+                                        <td>{{ data.year }}</td>
+                                        <td>{{ data.profession_name }}</td>
+                                        <td>{{ data.top_score }}</td>
+                                        <td><strong>{{ data.avg_score }}</strong></td>
+                                        <td>{{ data.lowest_score }}</td>
+                                        <td>{{ data.epoch }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if can_draw %}
+    // 使用JSON字符串并解析
+    const labels = JSON.parse('{{ chart_labels|escapejs }}');
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+
+    console.log('Labels:', labels);
+    console.log('Chart Data:', chartData);
+
+    let idx = 1;
+    for (const epoch in chartData) {
+        const ctx = document.getElementById('chart_' + idx);
+        if (!ctx) {
+            console.error('Canvas element not found: chart_' + idx);
+            idx++;
+            continue;
+        }
+
+        const ctx2d = ctx.getContext('2d');
+        const data = chartData[epoch];
+
+        console.log('Epoch:', epoch, 'Data:', data);
+
+        // 准备数据集
+        const datasets = [
+            {
+                label: '最高分',
+                data: data.top,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            },
+            {
+                label: '平均分',
+                data: data.avg,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                borderWidth: 3,
+                borderDash: [5, 5],  // 虚线突出显示平均分
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            },
+            {
+                label: '最低分',
+                data: data.low,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(75, 192, 192)',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }
+        ];
+
+        try {
+            new Chart(ctx2d, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: epoch + ' 历年分数线变化'
+                        },
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y === null) {
+                                        label += '无数据';
+                                    } else {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: '分数'
+                            },
+                            beginAtZero: false
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '年份'
+                            }
+                        }
+                    },
+                    spanGaps: false  // 不要连接空白数据
+                }
+            });
+            console.log('Chart created for:', epoch);
+        } catch (error) {
+            console.error('Error creating chart for', epoch, ':', error);
+        }
+
+        idx++;
+    }
+{% endif %}
+</script>
+{% endblock %}

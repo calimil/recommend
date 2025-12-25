@@ -24,3 +24,6 @@ urlpatterns = [
     path('', include('recommend_profession.urls')),
     path('admin/', admin.site.urls),
 ]
+
+# 新增功能
+path('', include('school_info.urls')),

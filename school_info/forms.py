@@ -52,6 +52,20 @@ class school_form(forms.Form):
     student_type = forms.ChoiceField(label='考生类别', choices=student_gender)
     epoch = forms.ChoiceField(label='录取批次', choices=epoch_gender)
 
-
+#新增功能
 class one_school_form(forms.Form):
     profession_name = forms.CharField(label="专业名称", empty_value='')
+
+class trend_form(forms.Form):
+    year_choices = (
+        ('2014', '2014'),
+        ('2015', '2015'),
+        ('2016', '2016'),
+        ('2017', '2017'),
+        ('2018', '2018'),
+    )
+
+    school_name = forms.CharField(label="院校名称", required=False)
+    profession_name = forms.CharField(label="专业名称", required=False)
+    start_year = forms.ChoiceField(label='起始年份', choices=year_choices)
+    end_year = forms.ChoiceField(label='结束年份', choices=year_choices)

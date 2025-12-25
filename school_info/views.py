@@ -5,6 +5,7 @@ from . import forms
 from django.core import serializers
 from . import views_function
 from django.views.decorators.csrf import csrf_exempt    # 取消csrf
+import json   #新增
 
 
 @csrf_exempt
@@ -71,3 +72,89 @@ def one_school(request, school_name):
         province = '全国'
     recommend_school_list = views_function.running(school_name, province=province)
     return render(request, 'one_school.html', locals())
+
+#新增功能
+@csrf_exempt
+def admission_trends(request):
+    if not request.session.get('is_login', None):
+        return redirect("/login/")
+
+    title = '历年录取数据趋势分析'
+
+    if request.method == 'POST':
+        request.session['trend_school_name'] = request.POST.get('school_name', '').strip()
+        request.session['trend_profession_name'] = request.POST.get('profession_name', '').strip()
+        request.session['start_year'] = request.POST.get('start_year')
+        request.session['end_year'] = request.POST.get('end_year')
+
+    school_name = request.session.get('trend_school_name', '')
+    profession_name = request.session.get('trend_profession_name', '')
+    start_year = request.session.get('start_year')
+    end_year = request.session.get('end_year')
+
+    can_draw = all([school_name, profession_name, start_year, end_year])
+
+    chart_data_dict = {}  # 给Django模板用的字典
+    chart_labels = []
+    years_data = {}
+
+    if can_draw:
+        qs = models.One_School.objects.filter(
+            school_name__contains=school_name,
+            profession_name__contains=profession_name,
+            year__range=(start_year, end_year)
+        )
+
+        qs = qs.order_by('year')
+
+        # 表格数据
+        for d in qs:
+            years_data.setdefault(d.year, []).append(d)
+
+        chart_labels = sorted(years_data.keys())
+
+        # 按批次 + 年份统计
+        epoch_year_map = {}
+        for d in qs:
+            epoch_year_map.setdefault(d.epoch, {}).setdefault(d.year, []).append(d)
+
+        for epoch, year_map in epoch_year_map.items():
+            top_list, avg_list, low_list = [], [], []
+
+            for y in chart_labels:
+                data = year_map.get(y, [])
+                tops = [float(i.top_score) for i in data if str(i.top_score).isdigit()]
+                avgs = [float(i.avg_score) for i in data if str(i.avg_score).isdigit()]
+                lows = [float(i.lowest_score) for i in data if str(i.lowest_score).isdigit()]
+
+                # 处理没数据的情况
+                top_val = round(sum(tops) / len(tops), 2) if tops else None
+                avg_val = round(sum(avgs) / len(avgs), 2) if avgs else None
+                low_val = round(sum(lows) / len(lows), 2) if lows else None
+
+                top_list.append(top_val)
+                avg_list.append(avg_val)
+                low_list.append(low_val)
+
+            chart_data_dict[epoch] = {'top': top_list, 'avg': avg_list, 'low': low_list}
+
+    trend_form = forms.trend_form(initial={
+        'school_name': school_name,
+        'profession_name': profession_name,
+        'start_year': start_year,
+        'end_year': end_year
+    })
+
+    # 转换为JSON字符串
+    chart_data_json = json.dumps(chart_data_dict)
+    chart_labels_json = json.dumps(chart_labels)
+
+    return render(request, 'admission_trends.html', {
+        'title': title,
+        'trend_form': trend_form,
+        'can_draw': can_draw,
+        'chart_labels': chart_labels_json,  # JSON字符串
+        'chart_data_dict': chart_data_dict,  # 给模板循环用的字典
+        'chart_data_json': chart_data_json,  # 给JS用的JSON字符串
+        'years_data': years_data,
+    })
