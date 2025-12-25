@@ -73,7 +73,7 @@ def one_school(request, school_name):
     recommend_school_list = views_function.running(school_name, province=province)
     return render(request, 'one_school.html', locals())
 
-#新增功能
+#易惜：新增功能（历年录取数据对比）
 @csrf_exempt
 def admission_trends(request):
     if not request.session.get('is_login', None):

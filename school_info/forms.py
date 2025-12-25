@@ -52,7 +52,7 @@ class school_form(forms.Form):
     student_type = forms.ChoiceField(label='考生类别', choices=student_gender)
     epoch = forms.ChoiceField(label='录取批次', choices=epoch_gender)
 
-#新增功能
+#易惜：新增功能（历年录取数据对比）
 class one_school_form(forms.Form):
     profession_name = forms.CharField(label="专业名称", empty_value='')
 
