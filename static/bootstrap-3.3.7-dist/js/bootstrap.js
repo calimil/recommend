@@ -25,56 +25,85 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+// 模块一：Transition（过渡动画支持）
+
+// + 确保函数被正确解析为表达式
+// $ 参数接收 jQuery 对象，避免全局依赖
 +function ($) {
-  'use strict';
+  'use strict';// 使用严格模式，提高代码质量，避免一些常见的JavaScript陷阱
 
   // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
   // ============================================================
 
+  // 1. transitionEnd() 函数
+  // 功能：检测浏览器支持的CSS过渡结束事件名称
   function transitionEnd() {
+    // 创建一个虚拟DOM元素用于检测样式支持
     var el = document.createElement('bootstrap');
 
+     // 不同浏览器对transitionend事件的不同命名
     var transEndEventNames = {
-      WebkitTransition : 'webkitTransitionEnd',
-      MozTransition    : 'transitionend',
-      OTransition      : 'oTransitionEnd otransitionend',
-      transition       : 'transitionend'
+      WebkitTransition : 'webkitTransitionEnd',     // Webkit内核浏览器（Chrome, Safari）
+      MozTransition    : 'transitionend',           // Firefox
+      OTransition      : 'oTransitionEnd otransitionend',// Opera
+      transition       : 'transitionend'            // 标准
     };
 
+    // 遍历所有浏览器前缀，检测哪个样式属性存在
     for (var name in transEndEventNames) {
+      // 检查该样式属性是否在浏览器中支持
       if (el.style[name] !== undefined) {
+        // 返回对应的事件名称
         return { end: transEndEventNames[name] }
       }
     }
 
-    return false // explicit for ie8 (  ._.)
+    return false // 明确返回false，表示IE8等不支持transition的浏览器
   }
 
   // http://blog.alexmaccaw.com/css-transitions
+  
+  // 2. emulateTransitionEnd() 方法
+  // 功能：模拟transition结束事件，确保在指定时间后触发
+  // 参数：duration - 过渡动画的持续时间（毫秒）
   $.fn.emulateTransitionEnd = function (duration) {
-    var called = false;
-    var $el = this;
-    $(this).one('bsTransitionEnd', function () { called = true });
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };
+    var called = false;     // 标记事件是否已被调用
+    var $el = this;         // 保存当前jQuery对象
+    
+    // 监听过渡结束事件
+    $(this).one('bsTransitionEnd', function () { called = true });      // 当事件触发时，标记为已调用
+    
+    // 超时回调函数：如果transitionend事件没有触发，则手动触发
+    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };     // 手动触发浏览器支持的transition结束事件
+    
+    //设置超时，确保过渡结束事件总会触发
     setTimeout(callback, duration);
-    return this
+
+    return this     // 返回this以支持链式调用
   };
 
+  // 3. 初始化代码 - 事件系统设置
+  // 文档加载完成后执行
   $(function () {
+    // 将transition检测结果保存到jQuery.support中
     $.support.transition = transitionEnd();
 
+    // 如果浏览器不支持CSS过渡，直接返回
     if (!$.support.transition) return;
 
+    // 定义自定义事件bsTransitionEnd，代理到实际的transitionend事件
     $.event.special.bsTransitionEnd = {
-      bindType: $.support.transition.end,
-      delegateType: $.support.transition.end,
+      bindType: $.support.transition.end,       // 绑定原生事件
+      delegateType: $.support.transition.end,   // 委托事件类型
       handle: function (e) {
+        // 确保事件目标匹配当前元素时才执行处理函数
         if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
       }
     }
   })
 
-}(jQuery);
+}(jQuery);    // 立即执行函数，传入jQuery参数
+// 模块一（32行开始）是Bootstrap框架中处理CSS动画过渡的核心组件，确保了在各种浏览器环境下动画事件的可靠触发。
 
 /* ========================================================================
  * Bootstrap: alert.js v3.3.7
@@ -84,89 +113,119 @@ if (typeof jQuery === 'undefined') {
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
-
+// 模块二：Alert（警告框）
 +function ($) {
-  'use strict';
+  'use strict';   // 严格模式
 
   // ALERT CLASS DEFINITION
   // ======================
 
-  var dismiss = '[data-dismiss="alert"]';
+  // 1. Alert构造函数
+  // 功能：初始化警告框的事件监听。
+  var dismiss = '[data-dismiss="alert"]';     // 定义关闭按钮的选择器 
   var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
+    // 在元素上绑定点击事件，点击关闭按钮时调用close方法
+    // 使用事件委托，处理动态添加的元素
+    $(el).on('click', dismiss, this.close)    
   };
 
-  Alert.VERSION = '3.3.7';
+  Alert.VERSION = '3.3.7';      // 组件版本号
+  Alert.TRANSITION_DURATION = 150;    // 过渡动画持续时间(毫秒)
 
-  Alert.TRANSITION_DURATION = 150;
-
+  // 2. 原型方法 - close（核心关闭逻辑）
   Alert.prototype.close = function (e) {
-    var $this    = $(this);
-    var selector = $this.attr('data-target');
+    var $this    = $(this);      // 当前点击的元素(关闭按钮)
+    var selector = $this.attr('data-target');     // 获取目标警告框的选择器
 
+    // 如果没有data-target属性，尝试从href获取
     if (!selector) {
-      selector = $this.attr('href');
+      selector = $this.attr('href');      // 获取href
       selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
+    }// 使用正则表达式去除IE7不兼容的部分
 
+    // 根据选择器找到要关闭的警告框父元素，如果是"#"则获取空jQuery对象
     var $parent = $(selector === '#' ? [] : selector);
 
-    if (e) e.preventDefault();
+    // （总结）选择器解析逻辑：
+    //      优先使用 data-target 属性
+    //      备用使用 href 属性（兼容旧版本）
+    //      正则表达式清理href中不必要的部分
 
+    if (e) e.preventDefault();      // 阻止默认行为（如链接跳转）
+
+    // 如果没找到指定父元素，查找最近的.alert元素
     if (!$parent.length) {
       $parent = $this.closest('.alert')
     }
 
-    $parent.trigger(e = $.Event('close.bs.alert'));
+    // 触发关闭前事件，允许阻止默认关闭行为
+    $parent.trigger(e = $.Event('close.bs.alert'));     //close.bs.alert - 关闭前触发，可取消
 
+    // 如果事件被阻止，停止执行
     if (e.isDefaultPrevented()) return;
 
+     // 移除'in'类，开始隐藏动画
     $parent.removeClass('in');
 
+    // 内部函数：完全移除元素
     function removeElement() {
-      // detach from parent, fire event then clean up data
-      $parent.detach().trigger('closed.bs.alert').remove()
+      // 从DOM分离，触发关闭后事件，清理数据
+      $parent.detach().trigger('closed.bs.alert').remove()      //closed.bs.alert - 关闭后触发
     }
 
+    // 判断是否支持过渡动画且元素有fade类
     $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one('bsTransitionEnd', removeElement)
-        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
-      removeElement()
+    // 支持过渡：等待过渡动画结束后移除元素  
+    $parent
+        .one('bsTransitionEnd', removeElement)      // 监听过渡结束
+        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :      // 设置超时保障
+      removeElement()     // 无动画直接移除
   };
-
+    //（总结）动画处理逻辑：
+    // 有动画：等待过渡动画完成后再移除元素
+    // 无动画：立即移除元素
+    // emulateTransitionEnd 确保即使动画异常也能执行移除
 
   // ALERT PLUGIN DEFINITION
   // =======================
 
+  // 3. jQuery插件定义（插件主函数）
+  //插件模式：支持链式调用和多个元素初始化
   function Plugin(option) {
+    // 遍历每个匹配的元素
     return this.each(function () {
-      var $this = $(this);
-      var data  = $this.data('bs.alert');
+      var $this = $(this);      // 当前元素
+      var data  = $this.data('bs.alert');     // 获取已存储的实例
 
+      // 如果没有初始化过，创建并存储
       if (!data) $this.data('bs.alert', (data = new Alert(this)));
+      // 如果传入方法名，调用对应方法
       if (typeof option == 'string') data[option].call($this)
     })
   }
 
-  var old = $.fn.alert;
+  var old = $.fn.alert;     // 保存原有alert方法（防冲突）
 
-  $.fn.alert             = Plugin;
-  $.fn.alert.Constructor = Alert;
+  $.fn.alert             = Plugin;      // 定义jQuery插件
+  $.fn.alert.Constructor = Alert;       // 暴露构造函数，便于扩展
 
 
   // ALERT NO CONFLICT
   // =================
 
+  // 防冲突方法
   $.fn.alert.noConflict = function () {
-    $.fn.alert = old;
-    return this
+    $.fn.alert = old;     // 恢复原有alert方法
+    return this           // 返回当前插件实例
   };
 
 
   // ALERT DATA-API
   // ==============
 
+  // 4. 数据API（自动初始化）
+  // 功能： 通过数据属性自动初始化：在文档上委托点击事件
+  // 为所有data-dismiss="alert"的元素自动绑定关闭功能
   $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
 
 }(jQuery);
@@ -180,67 +239,103 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+// 模块三：Button（按钮）
 +function ($) {
-  'use strict';
+  'use strict';     // 严格模式
 
   // BUTTON PUBLIC CLASS DEFINITION
   // ==============================
 
+  //1. 按钮类定义
+  // Button构造函数：初始化按钮实例，合并默认配置。
   var Button = function (element, options) {
-    this.$element  = $(element);
-    this.options   = $.extend({}, Button.DEFAULTS, options);
-    this.isLoading = false
+    this.$element  = $(element);      // 缓存jQuery元素对象
+    this.options   = $.extend({}, Button.DEFAULTS, options);      // 合并默认选项和用户选项
+    this.isLoading = false      // 初始化加载状态为false
   };
 
+  // 版本信息
   Button.VERSION  = '3.3.7';
 
+  // 默认配置
   Button.DEFAULTS = {
-    loadingText: 'loading...'
+    loadingText: 'loading...'     // 加载时显示的文本
   };
 
+  // 2. 核心方法 - setState（状态管理）
+  // 设置按钮状态的方法
   Button.prototype.setState = function (state) {
-    var d    = 'disabled';
-    var $el  = this.$element;
-    var val  = $el.is('input') ? 'val' : 'html';
-    var data = $el.data();
+    var d    = 'disabled';      // 禁用状态的类名和属性名
+    var $el  = this.$element;   // 按钮元素
+    var val  = $el.is('input') ? 'val' : 'html';      // 判断是input元素还是button元素，选择设置值的方法
+    var data = $el.data();      // 元素数据
 
+    // 构建状态文本的属性名，如 'loadingText'
     state += 'Text';
 
+    // 如果没有保存原始文本，先保存当前文本内容
     if (data.resetText == null) $el.data('resetText', $el[val]());
 
-    // push to event loop to allow forms to submit
+    // 使用setTimeout推到事件循环的下一个tick执行，确保表单能够正常提交
     setTimeout($.proxy(function () {
+      // 设置按钮文本：优先使用data属性中的文本，其次使用options中的文本，最后使用默认值
       $el[val](data[state] == null ? this.options[state] : data[state]);
 
+      // 如果是设置为加载状态
       if (state == 'loadingText') {
-        this.isLoading = true;
+        this.isLoading = true;      // 标记为加载中
+        // 添加禁用类、属性和属性
         $el.addClass(d).attr(d, d).prop(d, true)
       } else if (this.isLoading) {
-        this.isLoading = false;
+        // 如果之前是加载状态，现在要恢复正常状态
+        this.isLoading = false;     // 取消加载标记
+        // 移除禁用类、属性和属性
         $el.removeClass(d).removeAttr(d).prop(d, false)
       }
-    }, this), 0)
+    }, this), 0)      // 延迟0毫秒，实际上就是推到下一个事件循环
   };
 
+  // （总结）三重禁用机制：
+  //              addClass('disabled') - 视觉样式
+  //              attr('disabled', 'disabled') - HTML属性
+  //              prop('disabled', true) - DOM属性（最可靠）
+
+  // 3. 核心方法 - toggle（切换状态）
+  // 按钮组同步：保持视觉状态与表单元素状态一致。
   Button.prototype.toggle = function () {
-    var changed = true;
+    var changed = true;     // 标记状态是否改变
+    // 查找最近的按钮组父元素
     var $parent = this.$element.closest('[data-toggle="buttons"]');
 
+    // 如果存在按钮组
     if ($parent.length) {
+      // 查找按钮内的input元素
       var $input = this.$element.find('input');
+      
+        // 如果是单选按钮
       if ($input.prop('type') == 'radio') {
+        // 如果已经是选中状态，则状态没有改变
         if ($input.prop('checked')) changed = false;
+        // 移除按钮组中所有激活状态
         $parent.find('.active').removeClass('active');
+        // 当前按钮添加激活状态
         this.$element.addClass('active')
       } else if ($input.prop('type') == 'checkbox') {
+        // 如果是复选框
+        // 检查input的checked状态和按钮的active类是否一致
         if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false;
+        // 切换按钮的激活状态
         this.$element.toggleClass('active')
       }
+      // 同步input的checked属性和按钮的active类
       $input.prop('checked', this.$element.hasClass('active'));
+      // 如果状态改变，触发change事件
       if (changed) $input.trigger('change')
     } else {
-      this.$element.attr('aria-pressed', !this.$element.hasClass('active'));
-      this.$element.toggleClass('active')
+      // 独立按钮（不在按钮组中）
+      // 更新ARIA accessibility属性
+      this.$element.attr('aria-pressed', !this.$element.hasClass('active'));      //无障碍支持：aria-pressed属性帮助屏幕阅读器识别按钮状态
+      this.$element.toggleClass('active')     // 切换激活状态
     }
   };
 
@@ -248,54 +343,73 @@ if (typeof jQuery === 'undefined') {
   // BUTTON PLUGIN DEFINITION
   // ========================
 
+  // 4. jQuery插件定义
+  // 插件主函数，插件接口支持toggle和状态设置两种操作。
   function Plugin(option) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.button');
-      var options = typeof option == 'object' && option;
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.button');      // 从数据缓存获取button实例
+      var options = typeof option == 'object' && option;       // 如果option是对象，作为配置选项
 
+      // 如果没有初始化过，创建新的Button实例并缓存（单列模式）
       if (!data) $this.data('bs.button', (data = new Button(this, options)));
 
-      if (option == 'toggle') data.toggle();
-      else if (option) data.setState(option)
+      // 根据option参数执行相应操作
+      if (option == 'toggle') data.toggle();      // 切换状态
+      else if (option) data.setState(option)      // 设置状态：loading, reset等
     })
   }
 
+  // 保存旧的$.fn.button引用
   var old = $.fn.button;
 
-  $.fn.button             = Plugin;
-  $.fn.button.Constructor = Button;
+  // 注册jQuery插件
+  $.fn.button             = Plugin;     // 定义jQuery插件
+  $.fn.button.Constructor = Button;     // 暴露构造函数
 
 
   // BUTTON NO CONFLICT
   // ==================
 
+  // 解决命名冲突
   $.fn.button.noConflict = function () {
-    $.fn.button = old;
-    return this
+    $.fn.button = old;      // 恢复原来的$.fn.button
+    return this     // 返回当前插件
   };
 
 
   // BUTTON DATA-API
   // ===============
 
+  //5. 数据API（自动初始化与事件处理）
+  // 点击事件处理：自动为具有data-toggle属性的元素添加切换功能。
   $(document)
+    // 点击事件委托：处理所有以"button"开头的data-toggle属性
     .on('click.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      var $btn = $(e.target).closest('.btn');
-      Plugin.call($btn, 'toggle');
+      var $btn = $(e.target).closest('.btn');     // 查找最近的.btn元素
+      
+      Plugin.call($btn, 'toggle'); // 触发切换
+      
+      // 如果点击的不是radio或checkbox input元素（防止重复触发和异常选择）
       if (!($(e.target).is('input[type="radio"], input[type="checkbox"]'))) {
-        // Prevent double click on radios, and the double selections (so cancellation) on checkboxes
+        // 阻止默认行为，防止radio的双重点击和checkbox的双重选择
         e.preventDefault();
-        // The target component still receive the focus
-        if ($btn.is('input,button')) $btn.trigger('focus');
-        else $btn.find('input:visible,button:visible').first().trigger('focus')
+        
+        // 焦点管理：确保目标组件获得焦点
+        if ($btn.is('input,button')) $btn.trigger('focus');     // 如果是input或button元素，直接触发focus
+        else $btn.find('input:visible,button:visible').first().trigger('focus')     // 否则查找内部第一个可见的input或button并触发focus
       }
     })
+
+    //焦点样式管理：通过CSS类实现焦点状态的视觉反馈。
+    // 焦点和模糊事件委托：处理按钮的focus样式
     .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
+      // 切换focus类：根据事件类型是focusin还是focusout
       $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
     })
 
 }(jQuery);
+//模块三，展示了Bootstrap如何处理复杂的UI状态管理和用户交互
 
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.7
