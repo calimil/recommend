@@ -35,6 +35,7 @@ from django.contrib import admin
 # 导入URL路径处理函数：path用于定义单一路由，include用于包含其他URL配置文件
 from django.urls import path, include
 
+
 # urlpatterns：URL路由规则列表，Django会按顺序匹配URL并执行对应的视图
 urlpatterns = [
     # 将空路径（网站根路径，如http://localhost:8000/）交给user应用的urls.py处理
@@ -61,4 +62,5 @@ urlpatterns = [
     # 定义Django后台管理系统的URL路径：http://localhost:8000/admin/
     # admin.site.urls是Django内置的后台管理路由配置，无需手动编写
     path('admin/', admin.site.urls),
+    
 ]

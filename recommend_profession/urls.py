@@ -14,4 +14,6 @@ urlpatterns = [
     # 例如访问'profession/计算机科学与技术/'时，会将'计算机科学与技术'作为profession_name参数传递给views.profession函数
     # name='profession'为该路由命名，用于反向生成带参数的URL
     path('profession/<str:profession_name>/', views.profession, name='profession'),
+    path('major_popularity/', views.profession_major_chart, name='major_popularity'),
+    path('api/major/chart/data/', views.get_chart_data, name='get_chart_data'),
 ]

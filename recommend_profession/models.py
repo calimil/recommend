@@ -42,8 +42,8 @@ class Profession(models.Model):
 
 # 定义模型的元数据（影响模型的行为和显示）
     class Meta:
-        ordering = ["id"]   #数据库查询时的默认排序方式：按id升序排列
-        verbose_name = "专业信息"   #模型的单数显示名称
-        verbose_name_plural = "专业信息"    #模型的复数显示名称
+        ordering = ["id"]
+        verbose_name = "专业信息"
+        verbose_name_plural = "专业信息"
 
 
