@@ -1,3 +1,4 @@
+#林洋洋：新增test_all视图函数，实现所有问题在同一页面显示
 from django.shortcuts import render, redirect
 from user import models
 from . import models as t_model
@@ -21,6 +22,50 @@ def get_personality_type(n):
                 re['S'] += 1
     re = sorted(re.items(), key=lambda d: d[1], reverse=True)
     return re[0][0]+re[1][0]+re[2][0]
+
+
+def test_all(request):
+    if request.session.get('is_login', None) is None:
+        return redirect('/login')
+    
+    if request.method == 'POST':
+        answers = []
+        for i in range(48):
+            key = f'answer_{i}'
+            if key in request.POST:
+                answers.append(request.POST[key])
+            else:
+                answers.append('')
+        
+        if len([a for a in answers if a]) != 48:
+            questions = t_model.Question.objects.all()
+            unanswered_indices = []
+            question_data = []
+            for i, question in enumerate(questions):
+                answer = answers[i] if i < len(answers) else ''
+                if not answer:
+                    unanswered_indices.append(i)
+                question_data.append({
+                    'question': question,
+                    'answer': answer,
+                    'index': i
+                })
+            
+            return render(request, 'test.html', {
+                'question_data': question_data,
+                'error': f'您还有 {len(unanswered_indices)} 道题未回答，请完成后再提交！',
+                'unanswered_indices': unanswered_indices
+            })
+        
+        answer_str = '*' + ''.join(answers)
+        user = models.User.objects.get(username=request.session.get('username'))
+        user.personality_type = get_personality_type(answer_str)
+        user.save()
+        return redirect('/analysis')
+    
+    questions = t_model.Question.objects.all()
+    question_data = [{'question': q, 'answer': '', 'index': i} for i, q in enumerate(questions)]
+    return render(request, 'test.html', {'question_data': question_data})
 
 
 def test(request, num, answer):
@@ -47,12 +92,11 @@ def test(request, num, answer):
 
 def analysis(request):
     title = '性格分析'
-    # 没登录的跳去登录界面
     if request.session.get('is_login', None) is None:
         return redirect('/login')
     user = models.User.objects.get(username=request.session.get('username'))
     content = '分析的内容'
     p_type = user.personality_type
     if p_type == '0':
-        return redirect('/test/01/*/')
+        return redirect('/test/all/')
     return render(request, 'analysis.html', locals())

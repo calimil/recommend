@@ -1,3 +1,4 @@
+<!--#林洋洋：修改重新测试按钮链接，指向新的单页多题模式-->
 {# 继承 base.html #}
 {% extends "base.html" %}
 
@@ -9,21 +10,37 @@
 
 {# 替换内容 #}
 {% block content %}
-<div class="container">
-    <div class="row" >
-        <div class="col-md-6 col-md-offset-3"
-        style="background-color: #dedef8;box-shadow:
-        inset 1px -1px 1px #444, inset -1px 1px 1px #444;">
-        <p>您已完成性格测试,请查看为您<a href="../recommend_profession/">推荐的专业</a>吧</p>
+<div class="container" style="margin-top: 50px;">
+    <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title text-center">性格测试结果</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="text-center" style="padding: 30px 0;">
+                        <h2 style="color: #66afe9; font-weight: bold; margin-bottom: 20px;">您的性格类型：{{ p_type }}</h2>
+                        <p style="font-size: 16px; color: #555; line-height: 1.8;">
+                            根据您的测试结果，我们为您推荐了适合的专业。
+                        </p>
+                        <a href="/recommend_profession/" style="display: inline-block; margin-top: 20px;">
+                            <button type="button" class="btn btn-primary btn-lg">
+                                <span class="glyphicon glyphicon-search"></span> 查看推荐专业
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    <div class="col-md-6 col-md-offset-5">
-    <br/>
-    <a href="/test/01/*/">
-        <button type="button" class="btn btn-primary btn-lg">
-        <span class="glyphicon glyphicon-pencil"></span> 重新测试
-        </button>
-    </a>
-    </div>
+        <div class="col-md-8 col-md-offset-2" style="margin-top: 30px;">
+            <div class="text-center">
+                <a href="/test/all/" style="display: inline-block;">
+                    <button type="button" class="btn btn-default btn-lg">
+                        <span class="glyphicon glyphicon-refresh"></span> 重新测试
+                    </button>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
