@@ -5,8 +5,10 @@ from . import forms
 from django.core import serializers
 from . import views_function
 from django.views.decorators.csrf import csrf_exempt    # 取消csrf
-import json   #新增
-
+#易惜：新增
+import json
+#易惜：新增
+from django.http import JsonResponse
 
 @csrf_exempt
 def school_list(request):
@@ -92,6 +94,10 @@ def admission_trends(request):
     start_year = request.session.get('start_year')
     end_year = request.session.get('end_year')
 
+    #易惜：新增，获取所有学校名称和专业名称用于下拉菜单
+    all_schools = models.School_info.objects.values_list('school_name', flat=True).distinct().order_by('school_name')
+    all_professions = models.One_School.objects.values_list('profession_name', flat=True).distinct().order_by('profession_name')
+
     can_draw = all([school_name, profession_name, start_year, end_year])
 
     chart_data_dict = {}  # 给Django模板用的字典
@@ -157,4 +163,30 @@ def admission_trends(request):
         'chart_data_dict': chart_data_dict,  # 给模板循环用的字典
         'chart_data_json': chart_data_json,  # 给JS用的JSON字符串
         'years_data': years_data,
+
+        'all_schools': all_schools,  # 新增：所有学校列表
+        'all_professions': all_professions,  # 新增：所有专业列表
+    })
+
+#12.29
+# 易惜：新增，获取学校专业的API接口
+@csrf_exempt
+def get_school_professions(request):
+    """获取指定学校的专业列表"""
+    if not request.session.get('is_login', None):
+        return JsonResponse({'error': '未登录'}, status=403)
+
+    school_name = request.GET.get('school_name', '').strip()
+
+    if not school_name:
+        return JsonResponse({'professions': []})
+
+    # 查询该学校的所有专业
+    professions = models.One_School.objects.filter(
+        school_name__contains=school_name
+    ).values_list('profession_name', flat=True).distinct().order_by('profession_name')
+
+    return JsonResponse({
+        'professions': list(professions),
+        'school_name': school_name
     })
