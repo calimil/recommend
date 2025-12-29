@@ -25,56 +25,85 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+// 模块一：Transition（过渡动画支持）
+
+// + 确保函数被正确解析为表达式
+// $ 参数接收 jQuery 对象，避免全局依赖
 +function ($) {
-  'use strict';
+  'use strict';// 使用严格模式，提高代码质量，避免一些常见的JavaScript陷阱
 
   // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
   // ============================================================
 
+  // 1. transitionEnd() 函数
+  // 功能：检测浏览器支持的CSS过渡结束事件名称
   function transitionEnd() {
+    // 创建一个虚拟DOM元素用于检测样式支持
     var el = document.createElement('bootstrap');
 
+     // 不同浏览器对transitionend事件的不同命名
     var transEndEventNames = {
-      WebkitTransition : 'webkitTransitionEnd',
-      MozTransition    : 'transitionend',
-      OTransition      : 'oTransitionEnd otransitionend',
-      transition       : 'transitionend'
+      WebkitTransition : 'webkitTransitionEnd',     // Webkit内核浏览器（Chrome, Safari）
+      MozTransition    : 'transitionend',           // Firefox
+      OTransition      : 'oTransitionEnd otransitionend',// Opera
+      transition       : 'transitionend'            // 标准
     };
 
+    // 遍历所有浏览器前缀，检测哪个样式属性存在
     for (var name in transEndEventNames) {
+      // 检查该样式属性是否在浏览器中支持
       if (el.style[name] !== undefined) {
+        // 返回对应的事件名称
         return { end: transEndEventNames[name] }
       }
     }
 
-    return false // explicit for ie8 (  ._.)
+    return false // 明确返回false，表示IE8等不支持transition的浏览器
   }
 
   // http://blog.alexmaccaw.com/css-transitions
+  
+  // 2. emulateTransitionEnd() 方法
+  // 功能：模拟transition结束事件，确保在指定时间后触发
+  // 参数：duration - 过渡动画的持续时间（毫秒）
   $.fn.emulateTransitionEnd = function (duration) {
-    var called = false;
-    var $el = this;
-    $(this).one('bsTransitionEnd', function () { called = true });
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };
+    var called = false;     // 标记事件是否已被调用
+    var $el = this;         // 保存当前jQuery对象
+    
+    // 监听过渡结束事件
+    $(this).one('bsTransitionEnd', function () { called = true });      // 当事件触发时，标记为已调用
+    
+    // 超时回调函数：如果transitionend事件没有触发，则手动触发
+    var callback = function () { if (!called) $($el).trigger($.support.transition.end) };     // 手动触发浏览器支持的transition结束事件
+    
+    //设置超时，确保过渡结束事件总会触发
     setTimeout(callback, duration);
-    return this
+
+    return this     // 返回this以支持链式调用
   };
 
+  // 3. 初始化代码 - 事件系统设置
+  // 文档加载完成后执行
   $(function () {
+    // 将transition检测结果保存到jQuery.support中
     $.support.transition = transitionEnd();
 
+    // 如果浏览器不支持CSS过渡，直接返回
     if (!$.support.transition) return;
 
+    // 定义自定义事件bsTransitionEnd，代理到实际的transitionend事件
     $.event.special.bsTransitionEnd = {
-      bindType: $.support.transition.end,
-      delegateType: $.support.transition.end,
+      bindType: $.support.transition.end,       // 绑定原生事件
+      delegateType: $.support.transition.end,   // 委托事件类型
       handle: function (e) {
+        // 确保事件目标匹配当前元素时才执行处理函数
         if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
       }
     }
   })
 
-}(jQuery);
+}(jQuery);    // 立即执行函数，传入jQuery参数
+// 模块一（32行开始）是Bootstrap框架中处理CSS动画过渡的核心组件，确保了在各种浏览器环境下动画事件的可靠触发。
 
 /* ========================================================================
  * Bootstrap: alert.js v3.3.7
@@ -84,89 +113,119 @@ if (typeof jQuery === 'undefined') {
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  * ======================================================================== */
 
-
+// 模块二：Alert（警告框）
 +function ($) {
-  'use strict';
+  'use strict';   // 严格模式
 
   // ALERT CLASS DEFINITION
   // ======================
 
-  var dismiss = '[data-dismiss="alert"]';
+  // 1. Alert构造函数
+  // 功能：初始化警告框的事件监听。
+  var dismiss = '[data-dismiss="alert"]';     // 定义关闭按钮的选择器 
   var Alert   = function (el) {
-    $(el).on('click', dismiss, this.close)
+    // 在元素上绑定点击事件，点击关闭按钮时调用close方法
+    // 使用事件委托，处理动态添加的元素
+    $(el).on('click', dismiss, this.close)    
   };
 
-  Alert.VERSION = '3.3.7';
+  Alert.VERSION = '3.3.7';      // 组件版本号
+  Alert.TRANSITION_DURATION = 150;    // 过渡动画持续时间(毫秒)
 
-  Alert.TRANSITION_DURATION = 150;
-
+  // 2. 原型方法 - close（核心关闭逻辑）
   Alert.prototype.close = function (e) {
-    var $this    = $(this);
-    var selector = $this.attr('data-target');
+    var $this    = $(this);      // 当前点击的元素(关闭按钮)
+    var selector = $this.attr('data-target');     // 获取目标警告框的选择器
 
+    // 如果没有data-target属性，尝试从href获取
     if (!selector) {
-      selector = $this.attr('href');
+      selector = $this.attr('href');      // 获取href
       selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
-    }
+    }// 使用正则表达式去除IE7不兼容的部分
 
+    // 根据选择器找到要关闭的警告框父元素，如果是"#"则获取空jQuery对象
     var $parent = $(selector === '#' ? [] : selector);
 
-    if (e) e.preventDefault();
+    // （总结）选择器解析逻辑：
+    //      优先使用 data-target 属性
+    //      备用使用 href 属性（兼容旧版本）
+    //      正则表达式清理href中不必要的部分
 
+    if (e) e.preventDefault();      // 阻止默认行为（如链接跳转）
+
+    // 如果没找到指定父元素，查找最近的.alert元素
     if (!$parent.length) {
       $parent = $this.closest('.alert')
     }
 
-    $parent.trigger(e = $.Event('close.bs.alert'));
+    // 触发关闭前事件，允许阻止默认关闭行为
+    $parent.trigger(e = $.Event('close.bs.alert'));     //close.bs.alert - 关闭前触发，可取消
 
+    // 如果事件被阻止，停止执行
     if (e.isDefaultPrevented()) return;
 
+     // 移除'in'类，开始隐藏动画
     $parent.removeClass('in');
 
+    // 内部函数：完全移除元素
     function removeElement() {
-      // detach from parent, fire event then clean up data
-      $parent.detach().trigger('closed.bs.alert').remove()
+      // 从DOM分离，触发关闭后事件，清理数据
+      $parent.detach().trigger('closed.bs.alert').remove()      //closed.bs.alert - 关闭后触发
     }
 
+    // 判断是否支持过渡动画且元素有fade类
     $.support.transition && $parent.hasClass('fade') ?
-      $parent
-        .one('bsTransitionEnd', removeElement)
-        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :
-      removeElement()
+    // 支持过渡：等待过渡动画结束后移除元素  
+    $parent
+        .one('bsTransitionEnd', removeElement)      // 监听过渡结束
+        .emulateTransitionEnd(Alert.TRANSITION_DURATION) :      // 设置超时保障
+      removeElement()     // 无动画直接移除
   };
-
+    //（总结）动画处理逻辑：
+    // 有动画：等待过渡动画完成后再移除元素
+    // 无动画：立即移除元素
+    // emulateTransitionEnd 确保即使动画异常也能执行移除
 
   // ALERT PLUGIN DEFINITION
   // =======================
 
+  // 3. jQuery插件定义（插件主函数）
+  //插件模式：支持链式调用和多个元素初始化
   function Plugin(option) {
+    // 遍历每个匹配的元素
     return this.each(function () {
-      var $this = $(this);
-      var data  = $this.data('bs.alert');
+      var $this = $(this);      // 当前元素
+      var data  = $this.data('bs.alert');     // 获取已存储的实例
 
+      // 如果没有初始化过，创建并存储
       if (!data) $this.data('bs.alert', (data = new Alert(this)));
+      // 如果传入方法名，调用对应方法
       if (typeof option == 'string') data[option].call($this)
     })
   }
 
-  var old = $.fn.alert;
+  var old = $.fn.alert;     // 保存原有alert方法（防冲突）
 
-  $.fn.alert             = Plugin;
-  $.fn.alert.Constructor = Alert;
+  $.fn.alert             = Plugin;      // 定义jQuery插件
+  $.fn.alert.Constructor = Alert;       // 暴露构造函数，便于扩展
 
 
   // ALERT NO CONFLICT
   // =================
 
+  // 防冲突方法
   $.fn.alert.noConflict = function () {
-    $.fn.alert = old;
-    return this
+    $.fn.alert = old;     // 恢复原有alert方法
+    return this           // 返回当前插件实例
   };
 
 
   // ALERT DATA-API
   // ==============
 
+  // 4. 数据API（自动初始化）
+  // 功能： 通过数据属性自动初始化：在文档上委托点击事件
+  // 为所有data-dismiss="alert"的元素自动绑定关闭功能
   $(document).on('click.bs.alert.data-api', dismiss, Alert.prototype.close)
 
 }(jQuery);
@@ -180,67 +239,103 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+// 模块三：Button（按钮）
 +function ($) {
-  'use strict';
+  'use strict';     // 严格模式
 
   // BUTTON PUBLIC CLASS DEFINITION
   // ==============================
 
+  //1. 按钮类定义
+  // Button构造函数：初始化按钮实例，合并默认配置。
   var Button = function (element, options) {
-    this.$element  = $(element);
-    this.options   = $.extend({}, Button.DEFAULTS, options);
-    this.isLoading = false
+    this.$element  = $(element);      // 缓存jQuery元素对象
+    this.options   = $.extend({}, Button.DEFAULTS, options);      // 合并默认选项和用户选项
+    this.isLoading = false      // 初始化加载状态为false
   };
 
+  // 版本信息
   Button.VERSION  = '3.3.7';
 
+  // 默认配置
   Button.DEFAULTS = {
-    loadingText: 'loading...'
+    loadingText: 'loading...'     // 加载时显示的文本
   };
 
+  // 2. 核心方法 - setState（状态管理）
+  // 设置按钮状态的方法
   Button.prototype.setState = function (state) {
-    var d    = 'disabled';
-    var $el  = this.$element;
-    var val  = $el.is('input') ? 'val' : 'html';
-    var data = $el.data();
+    var d    = 'disabled';      // 禁用状态的类名和属性名
+    var $el  = this.$element;   // 按钮元素
+    var val  = $el.is('input') ? 'val' : 'html';      // 判断是input元素还是button元素，选择设置值的方法
+    var data = $el.data();      // 元素数据
 
+    // 构建状态文本的属性名，如 'loadingText'
     state += 'Text';
 
+    // 如果没有保存原始文本，先保存当前文本内容
     if (data.resetText == null) $el.data('resetText', $el[val]());
 
-    // push to event loop to allow forms to submit
+    // 使用setTimeout推到事件循环的下一个tick执行，确保表单能够正常提交
     setTimeout($.proxy(function () {
+      // 设置按钮文本：优先使用data属性中的文本，其次使用options中的文本，最后使用默认值
       $el[val](data[state] == null ? this.options[state] : data[state]);
 
+      // 如果是设置为加载状态
       if (state == 'loadingText') {
-        this.isLoading = true;
+        this.isLoading = true;      // 标记为加载中
+        // 添加禁用类、属性和属性
         $el.addClass(d).attr(d, d).prop(d, true)
       } else if (this.isLoading) {
-        this.isLoading = false;
+        // 如果之前是加载状态，现在要恢复正常状态
+        this.isLoading = false;     // 取消加载标记
+        // 移除禁用类、属性和属性
         $el.removeClass(d).removeAttr(d).prop(d, false)
       }
-    }, this), 0)
+    }, this), 0)      // 延迟0毫秒，实际上就是推到下一个事件循环
   };
 
+  // （总结）三重禁用机制：
+  //              addClass('disabled') - 视觉样式
+  //              attr('disabled', 'disabled') - HTML属性
+  //              prop('disabled', true) - DOM属性（最可靠）
+
+  // 3. 核心方法 - toggle（切换状态）
+  // 按钮组同步：保持视觉状态与表单元素状态一致。
   Button.prototype.toggle = function () {
-    var changed = true;
+    var changed = true;     // 标记状态是否改变
+    // 查找最近的按钮组父元素
     var $parent = this.$element.closest('[data-toggle="buttons"]');
 
+    // 如果存在按钮组
     if ($parent.length) {
+      // 查找按钮内的input元素
       var $input = this.$element.find('input');
+      
+        // 如果是单选按钮
       if ($input.prop('type') == 'radio') {
+        // 如果已经是选中状态，则状态没有改变
         if ($input.prop('checked')) changed = false;
+        // 移除按钮组中所有激活状态
         $parent.find('.active').removeClass('active');
+        // 当前按钮添加激活状态
         this.$element.addClass('active')
       } else if ($input.prop('type') == 'checkbox') {
+        // 如果是复选框
+        // 检查input的checked状态和按钮的active类是否一致
         if (($input.prop('checked')) !== this.$element.hasClass('active')) changed = false;
+        // 切换按钮的激活状态
         this.$element.toggleClass('active')
       }
+      // 同步input的checked属性和按钮的active类
       $input.prop('checked', this.$element.hasClass('active'));
+      // 如果状态改变，触发change事件
       if (changed) $input.trigger('change')
     } else {
-      this.$element.attr('aria-pressed', !this.$element.hasClass('active'));
-      this.$element.toggleClass('active')
+      // 独立按钮（不在按钮组中）
+      // 更新ARIA accessibility属性
+      this.$element.attr('aria-pressed', !this.$element.hasClass('active'));      //无障碍支持：aria-pressed属性帮助屏幕阅读器识别按钮状态
+      this.$element.toggleClass('active')     // 切换激活状态
     }
   };
 
@@ -248,54 +343,73 @@ if (typeof jQuery === 'undefined') {
   // BUTTON PLUGIN DEFINITION
   // ========================
 
+  // 4. jQuery插件定义
+  // 插件主函数，插件接口支持toggle和状态设置两种操作。
   function Plugin(option) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.button');
-      var options = typeof option == 'object' && option;
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.button');      // 从数据缓存获取button实例
+      var options = typeof option == 'object' && option;       // 如果option是对象，作为配置选项
 
+      // 如果没有初始化过，创建新的Button实例并缓存（单列模式）
       if (!data) $this.data('bs.button', (data = new Button(this, options)));
 
-      if (option == 'toggle') data.toggle();
-      else if (option) data.setState(option)
+      // 根据option参数执行相应操作
+      if (option == 'toggle') data.toggle();      // 切换状态
+      else if (option) data.setState(option)      // 设置状态：loading, reset等
     })
   }
 
+  // 保存旧的$.fn.button引用
   var old = $.fn.button;
 
-  $.fn.button             = Plugin;
-  $.fn.button.Constructor = Button;
+  // 注册jQuery插件
+  $.fn.button             = Plugin;     // 定义jQuery插件
+  $.fn.button.Constructor = Button;     // 暴露构造函数
 
 
   // BUTTON NO CONFLICT
   // ==================
 
+  // 解决命名冲突
   $.fn.button.noConflict = function () {
-    $.fn.button = old;
-    return this
+    $.fn.button = old;      // 恢复原来的$.fn.button
+    return this     // 返回当前插件
   };
 
 
   // BUTTON DATA-API
   // ===============
 
+  //5. 数据API（自动初始化与事件处理）
+  // 点击事件处理：自动为具有data-toggle属性的元素添加切换功能。
   $(document)
+    // 点击事件委托：处理所有以"button"开头的data-toggle属性
     .on('click.bs.button.data-api', '[data-toggle^="button"]', function (e) {
-      var $btn = $(e.target).closest('.btn');
-      Plugin.call($btn, 'toggle');
+      var $btn = $(e.target).closest('.btn');     // 查找最近的.btn元素
+      
+      Plugin.call($btn, 'toggle'); // 触发切换
+      
+      // 如果点击的不是radio或checkbox input元素（防止重复触发和异常选择）
       if (!($(e.target).is('input[type="radio"], input[type="checkbox"]'))) {
-        // Prevent double click on radios, and the double selections (so cancellation) on checkboxes
+        // 阻止默认行为，防止radio的双重点击和checkbox的双重选择
         e.preventDefault();
-        // The target component still receive the focus
-        if ($btn.is('input,button')) $btn.trigger('focus');
-        else $btn.find('input:visible,button:visible').first().trigger('focus')
+        
+        // 焦点管理：确保目标组件获得焦点
+        if ($btn.is('input,button')) $btn.trigger('focus');     // 如果是input或button元素，直接触发focus
+        else $btn.find('input:visible,button:visible').first().trigger('focus')     // 否则查找内部第一个可见的input或button并触发focus
       }
     })
+
+    //焦点样式管理：通过CSS类实现焦点状态的视觉反馈。
+    // 焦点和模糊事件委托：处理按钮的focus样式
     .on('focus.bs.button.data-api blur.bs.button.data-api', '[data-toggle^="button"]', function (e) {
+      // 切换focus类：根据事件类型是focusin还是focusout
       $(e.target).closest('.btn').toggleClass('focus', /^focus(in)?$/.test(e.type))
     })
 
 }(jQuery);
+//模块三，展示了Bootstrap如何处理复杂的UI状态管理和用户交互
 
 /* ========================================================================
  * Bootstrap: carousel.js v3.3.7
@@ -306,56 +420,65 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块四：Carousel（轮播图）
 +function ($) {
   'use strict';
 
   // CAROUSEL CLASS DEFINITION
   // =========================
 
+  //1. 轮播类定义与初始化
   var Carousel = function (element, options) {
-    this.$element    = $(element);
-    this.$indicators = this.$element.find('.carousel-indicators');
-    this.options     = options;
-    this.paused      = null;
-    this.sliding     = null;
-    this.interval    = null;
-    this.$active     = null;
-    this.$items      = null;
+    this.$element    = $(element);      // 轮播容器
+    this.$indicators = this.$element.find('.carousel-indicators');      // 指示器
+    this.options     = options;     // 配置选项
+    this.paused      = null;        // 暂停状态
+    this.sliding     = null;        // 滑动进行中标志
+    this.interval    = null;        // 自动轮播计时器
+    this.$active     = null;        // 当前活动幻灯片
+    this.$items      = null;        // 所有幻灯片
 
+    // 键盘事件支持
     this.options.keyboard && this.$element.on('keydown.bs.carousel', $.proxy(this.keydown, this));
 
+    // 鼠标悬停暂停（排除触摸设备）
     this.options.pause == 'hover' && !('ontouchstart' in document.documentElement) && this.$element
-      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))
-      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))
+      .on('mouseenter.bs.carousel', $.proxy(this.pause, this))      // 鼠标进入暂停
+      .on('mouseleave.bs.carousel', $.proxy(this.cycle, this))      // 鼠标离开继续
   };
 
-  Carousel.VERSION  = '3.3.7';
+  Carousel.VERSION  = '3.3.7';      // 组件版本号
 
-  Carousel.TRANSITION_DURATION = 600;
+  Carousel.TRANSITION_DURATION = 600;     // 过渡动画持续时间
 
   Carousel.DEFAULTS = {
-    interval: 5000,
-    pause: 'hover',
-    wrap: true,
-    keyboard: true
+    interval: 5000,     // 自动轮播间隔
+    pause: 'hover',     // 悬停暂停
+    wrap: true,         // 循环播放
+    keyboard: true      // 键盘支持
   };
 
+  //2. 事件处理方法
+  //键盘导航：支持左右箭头键切换幻灯片。
   Carousel.prototype.keydown = function (e) {
+    // 如果在输入框中，不处理键盘事件
     if (/input|textarea/i.test(e.target.tagName)) return;
     switch (e.which) {
-      case 37: this.prev(); break;
-      case 39: this.next(); break;
-      default: return
+      case 37: this.prev(); break;      // 左箭头：上一张
+      case 39: this.next(); break;      // 右箭头：下一张
+      default: return     // 其他按键不处理
     }
 
-    e.preventDefault()
+    e.preventDefault()      // 阻止默认行为
   };
 
+  //自动轮播控制：启动或恢复自动轮播。
   Carousel.prototype.cycle = function (e) {
-    e || (this.paused = false);
+    e || (this.paused = false);     // 重置暂停状态
 
-    this.interval && clearInterval(this.interval);
+    this.interval && clearInterval(this.interval);      // 清除现有计时器
 
+    // 设置新的自动轮播计时器
     this.options.interval
       && !this.paused
       && (this.interval = setInterval($.proxy(this.next, this), this.options.interval));
@@ -363,107 +486,148 @@ if (typeof jQuery === 'undefined') {
     return this
   };
 
+  //3. 幻灯片导航核心方法
+  //索引计算：获取幻灯片在容器中的位置。
   Carousel.prototype.getItemIndex = function (item) {
-    this.$items = item.parent().children('.item');
-    return this.$items.index(item || this.$active)
+    this.$items = item.parent().children('.item');      // 获取所有幻灯片
+    return this.$items.index(item || this.$active)      // 返回指定幻灯片的索引
   };
 
+  //方向导航：根据方向计算下一张幻灯片，支持循环逻辑。
   Carousel.prototype.getItemForDirection = function (direction, active) {
     var activeIndex = this.getItemIndex(active);
+    // 检查是否到达边界且不允许循环
     var willWrap = (direction == 'prev' && activeIndex === 0)
                 || (direction == 'next' && activeIndex == (this.$items.length - 1));
-    if (willWrap && !this.options.wrap) return active;
+    if (willWrap && !this.options.wrap) return active;      // 不循环则返回当前
+
+    // 计算方向增量：上一张减1，下一张加1
     var delta = direction == 'prev' ? -1 : 1;
-    var itemIndex = (activeIndex + delta) % this.$items.length;
+    var itemIndex = (activeIndex + delta) % this.$items.length;     // 计算新索引（支持循环）
     return this.$items.eq(itemIndex)
   };
 
+  //跳转到指定位置：支持直接跳转到特定幻灯片。
   Carousel.prototype.to = function (pos) {
-    var that        = this;
-    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'));
+    var that        = this;     // 保存this引用
+    var activeIndex = this.getItemIndex(this.$active = this.$element.find('.item.active'));     // 当前激活索引
 
-    if (pos > (this.$items.length - 1) || pos < 0) return;
+    if (pos > (this.$items.length - 1) || pos < 0) return;      // 索引越界检查
 
+    // 如果正在滑动，等待完成后执行
     if (this.sliding)       return this.$element.one('slid.bs.carousel', function () { that.to(pos) }); // yes, "slid"
-    if (activeIndex == pos) return this.pause().cycle();
+    if (activeIndex == pos) return this.pause().cycle();      // 已经是目标位置
 
+    // 根据位置关系决定滑动方向
     return this.slide(pos > activeIndex ? 'next' : 'prev', this.$items.eq(pos))
   };
 
+  //4. 暂停与导航控制方法
   Carousel.prototype.pause = function (e) {
+    // 设置暂停状态：如果有事件参数，保持原状态；否则设置为true
     e || (this.paused = true);
 
+    // 处理特殊情况：当有滑动动画正在进行时，需要立即完成过渡
     if (this.$element.find('.next, .prev').length && $.support.transition) {
+      // 手动触发过渡结束事件，强制立即完成当前动画
       this.$element.trigger($.support.transition.end);
+      // 重新启动轮播周期（参数true表示强制重置）
       this.cycle(true)
     }
 
+    // 清除自动轮播的计时器
     this.interval = clearInterval(this.interval);
 
-    return this
+    return this     // 支持链式调用
   };
 
   Carousel.prototype.next = function () {
+    // 安全检查：如果正在滑动中，忽略此次调用（防止重复触发）
     if (this.sliding) return;
+    
+    // 调用slide方法执行"下一张"滑动
     return this.slide('next')
   };
 
   Carousel.prototype.prev = function () {
+    // 同样的防重复触发检查
     if (this.sliding) return;
+
+    // 调用slide方法执行"上一张"滑动
     return this.slide('prev')
   };
 
+  //5. 滑动动画核心逻辑
   Carousel.prototype.slide = function (type, next) {
-    var $active   = this.$element.find('.item.active');
-    var $next     = next || this.getItemForDirection(type, $active);
-    var isCycling = this.interval;
-    var direction = type == 'next' ? 'left' : 'right';
+    var $active   = this.$element.find('.item.active');     // 当前活动幻灯片
+    var $next     = next || this.getItemForDirection(type, $active);      // 下一张幻灯片
+    var isCycling = this.interval;      // 是否正在自动轮播
+    var direction = type == 'next' ? 'left' : 'right';      // 滑动方向
     var that      = this;
 
-    if ($next.hasClass('active')) return (this.sliding = false);
+    if ($next.hasClass('active')) return (this.sliding = false);      // 已经是活动状态
 
+    // 触发滑动前事件
+    //滑动准备阶段：验证滑动条件，更新UI状态。
     var relatedTarget = $next[0];
     var slideEvent = $.Event('slide.bs.carousel', {
       relatedTarget: relatedTarget,
       direction: direction
     });
     this.$element.trigger(slideEvent);
-    if (slideEvent.isDefaultPrevented()) return;
+    if (slideEvent.isDefaultPrevented()) return;      // 事件被取消则停止
 
-    this.sliding = true;
+    this.sliding = true;      // 标记滑动开始
 
-    isCycling && this.pause();
+    isCycling && this.pause();      // 暂停自动轮播
 
+    // 如果有指示器，更新指示器状态
     if (this.$indicators.length) {
+      // 移除当前激活的指示器
       this.$indicators.find('.active').removeClass('active');
+      // 获取对应位置的指示器并激活
       var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)]);
       $nextIndicator && $nextIndicator.addClass('active')
     }
 
+    // 触发滑动后事件
+    //动画执行阶段：处理CSS过渡动画或直接切换。
     var slidEvent = $.Event('slid.bs.carousel', { relatedTarget: relatedTarget, direction: direction }); // yes, "slid"
+    // CSS过渡动画支持
     if ($.support.transition && this.$element.hasClass('slide')) {
+      // 添加滑动方向类
       $next.addClass(type);
-      $next[0].offsetWidth; // force reflow
+      $next[0].offsetWidth;       // 强制重排，触发CSS过渡
+      // 添加滑动动画类
       $active.addClass(direction);
       $next.addClass(direction);
+      
+      // 绑定过渡结束事件
       $active
         .one('bsTransitionEnd', function () {
+          // 动画完成后的清理工作
           $next.removeClass([type, direction].join(' ')).addClass('active');
+           // 移除当前激活项的类
           $active.removeClass(['active', direction].join(' '));
+          // 标记滑动结束
           that.sliding = false;
+
+          // 异步触发滑动完成事件
           setTimeout(function () {
             that.$element.trigger(slidEvent)
           }, 0)
         })
-        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)
+        .emulateTransitionEnd(Carousel.TRANSITION_DURATION)     // 过渡结束保障
     } else {
+      // 无动画版本的简单切换
       $active.removeClass('active');
       $next.addClass('active');
       this.sliding = false;
+      // 触发滑动结束事件
       this.$element.trigger(slidEvent)
     }
 
-    isCycling && this.cycle();
+    isCycling && this.cycle();      // 恢复自动轮播
 
     return this
   };
@@ -472,22 +636,29 @@ if (typeof jQuery === 'undefined') {
   // CAROUSEL PLUGIN DEFINITION
   // ==========================
 
+  //6. jQuery插件定义
+  //插件接口：支持多种调用方式。
   function Plugin(option) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.carousel');
-      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option);
-      var action  = typeof option == 'string' ? option : options.slide;
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.carousel');      // 从数据缓存获取实例
+      var options = $.extend({}, Carousel.DEFAULTS, $this.data(), typeof option == 'object' && option);     // 合并配置
+      var action  = typeof option == 'string' ? option : options.slide;     // 判断操作类型
 
+      // 如果没有初始化过，创建新实例并缓存
       if (!data) $this.data('bs.carousel', (data = new Carousel(this, options)));
-      if (typeof option == 'number') data.to(option);
-      else if (action) data[action]();
-      else if (options.interval) data.pause().cycle()
+      
+      // 根据option类型执行相应操作
+      if (typeof option == 'number') data.to(option);     // 跳转到指定索引
+      else if (action) data[action]();      // 执行指定动作
+      else if (options.interval) data.pause().cycle()     // 启动自动轮播
     })
   }
 
+  // 保存旧的$.fn.carousel引用
   var old = $.fn.carousel;
 
+  // 注册jQuery插件
   $.fn.carousel             = Plugin;
   $.fn.carousel.Constructor = Carousel;
 
@@ -495,38 +666,49 @@ if (typeof jQuery === 'undefined') {
   // CAROUSEL NO CONFLICT
   // ====================
 
+  // 解决命名冲突
   $.fn.carousel.noConflict = function () {
-    $.fn.carousel = old;
-    return this
+    $.fn.carousel = old;      // 恢复原来的$.fn.carousel
+    return this     // 返回当前插件
   };
 
 
   // CAROUSEL DATA-API
   // =================
 
+  //7. 数据API（自动初始化）
+  //点击事件处理：处理导航按钮和指示器的点击。
   var clickHandler = function (e) {
     var href;
-    var $this   = $(this);
-    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')); // strip for ie7
+    var $this   = $(this);      // 点击的元素
+    // 解析目标轮播容器
+    var $target = $($this.attr('data-target') || (href = $this.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')); // 处理IE7兼容
+    // 如果不是轮播容器，直接返回
     if (!$target.hasClass('carousel')) return;
+    
+    // 合并配置选项
     var options = $.extend({}, $target.data(), $this.data());
-    var slideIndex = $this.attr('data-slide-to');
-    if (slideIndex) options.interval = false;
+    var slideIndex = $this.attr('data-slide-to');     // 获取目标幻灯片索引
+    if (slideIndex) options.interval = false;     // 手动切换时暂停自动轮播
 
+    // 初始化或调用轮播插件
     Plugin.call($target, options);
 
+    // 如果指定了具体索引，跳转到该索引
     if (slideIndex) {
-      $target.data('bs.carousel').to(slideIndex)
+      $target.data('bs.carousel').to(slideIndex)      // 跳转到指定幻灯片
     }
 
-    e.preventDefault()
+    e.preventDefault()      // 阻止默认行为
   };
 
+  // 通过数据属性自动初始化
   $(document)
-    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)
-    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler);
+    .on('click.bs.carousel.data-api', '[data-slide]', clickHandler)     // 上一张/下一张
+    .on('click.bs.carousel.data-api', '[data-slide-to]', clickHandler);     // 跳转到指定位置
 
-  $(window).on('load', function () {
+  // 页面加载完成后自动初始化带有data-ride="carousel"的轮播
+    $(window).on('load', function () {
     $('[data-ride="carousel"]').each(function () {
       var $carousel = $(this);
       Plugin.call($carousel, $carousel.data())
@@ -534,6 +716,7 @@ if (typeof jQuery === 'undefined') {
   })
 
 }(jQuery);
+//模块四展示了复杂UI组件的完整架构，包括状态管理、动画处理、事件系统和用户交互，是前端组件开发的典范。
 
 /* ========================================================================
  * Bootstrap: collapse.js v3.3.7
@@ -545,179 +728,244 @@ if (typeof jQuery === 'undefined') {
 
 /* jshint latedef: false */
 
+//模块五：Collapse（折叠面板）
 +function ($) {
   'use strict';
 
   // COLLAPSE PUBLIC CLASS DEFINITION
   // ================================
 
+  //1. 折叠类定义与初始化
+  //构造函数：初始化折叠实例，处理触发器和父级关系。
   var Collapse = function (element, options) {
-    this.$element      = $(element);
-    this.options       = $.extend({}, Collapse.DEFAULTS, options);
+    this.$element      = $(element);      // 折叠内容容器
+    this.options       = $.extend({}, Collapse.DEFAULTS, options);      // 合并配置
+    // 查找所有触发此折叠元素的触发器按钮
     this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
                            '[data-toggle="collapse"][data-target="#' + element.id + '"]');
-    this.transitioning = null;
+    this.transitioning = null;      // 过渡动画状态标志
 
+    // 如果设置了父级容器，初始化手风琴效果
     if (this.options.parent) {
       this.$parent = this.getParent()
     } else {
+      // 独立折叠元素：设置ARIA属性和初始状态
       this.addAriaAndCollapsedClass(this.$element, this.$trigger)
     }
 
+    // 如果配置了toggle选项，立即执行切换
     if (this.options.toggle) this.toggle()
   };
 
-  Collapse.VERSION  = '3.3.7';
+  Collapse.VERSION  = '3.3.7';      // 组件版本号
 
-  Collapse.TRANSITION_DURATION = 350;
+  Collapse.TRANSITION_DURATION = 350;     // 过渡动画持续时间
 
   Collapse.DEFAULTS = {
-    toggle: true
+    toggle: true      // 默认自动切换
   };
 
+  //2. 核心辅助方法+核心展开方法+核心收起方法
+  //维度检测：支持水平和垂直两种折叠方向。
   Collapse.prototype.dimension = function () {
-    var hasWidth = this.$element.hasClass('width');
-    return hasWidth ? 'width' : 'height'
+    var hasWidth = this.$element.hasClass('width');     // 检查是否是水平折叠
+    return hasWidth ? 'width' : 'height'      // 返回对应的CSS维度
   };
 
+  //显示折叠内容
   Collapse.prototype.show = function () {
+    // 安全检查1：如果正在过渡动画中或已经处于展开状态，直接返回避免重复操作
     if (this.transitioning || this.$element.hasClass('in')) return;
 
     var activesData;
+    // 手风琴模式检查：在父容器中查找当前正在展开或正在动画的项
     var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing');
 
     if (actives && actives.length) {
+      // 获取其他活动项的Collapse实例数据
       activesData = actives.data('bs.collapse');
+      // 安全检查2：如果其他项正在动画中，等待其完成，避免动画冲突
       if (activesData && activesData.transitioning) return
     }
+    //（总结）手风琴模式关键逻辑：
+    //      .in 类表示已展开状态
+    //      .collapsing 类表示动画进行中状态
+    //      确保同一时间只有一个项在展开动画中
 
+    // 触发展开前事件，允许外部代码阻止默认展开行为
     var startEvent = $.Event('show.bs.collapse');
     this.$element.trigger(startEvent);
+    // 如果事件被阻止（e.preventDefault()），停止执行
     if (startEvent.isDefaultPrevented()) return;
 
+    // 手风琴模式：先关闭其他已展开的项
     if (actives && actives.length) {
-      Plugin.call(actives, 'hide');
+      Plugin.call(actives, 'hide');     // 调用hide方法关闭其他项
+      // 清理数据引用：如果activesData不存在，设置为null避免内存泄漏
       activesData || actives.data('bs.collapse', null)
     }
+    // （总结）事件系统的重要性：
+    //       show.bs.collapse - 展开前触发，可取消
+    //       为开发者提供钩子，在特定时机执行自定义逻辑
 
-    var dimension = this.dimension();
+    var dimension = this.dimension();     // 获取折叠方向：'height' 或 'width'
 
+    // 准备展开动画的初始状态
     this.$element
-      .removeClass('collapse')
-      .addClass('collapsing')[dimension](0)
-      .attr('aria-expanded', true);
+      .removeClass('collapse')      // 移除默认状态类
+      .addClass('collapsing')[dimension](0)     // 添加动画进行中类；设置初始尺寸为0（开始折叠状态）
+      .attr('aria-expanded', true);     // 无障碍支持：标记为展开状态
 
-    this.$trigger
-      .removeClass('collapsed')
-      .attr('aria-expanded', true);
+    // 同步更新触发器的状态
+      this.$trigger
+      .removeClass('collapsed')     // 移除折叠视觉状态
+      .attr('aria-expanded', true);     // 无障碍支持：标记触发器为展开状态
 
-    this.transitioning = 1;
+    this.transitioning = 1;     // 设置标志位，表示动画正在进行中
+    //（总结） CSS类状态管理：
+    //     collapse - 默认折叠状态
+    //     collapsing - 动画进行中状态
+    //     collapse in - 展开完成状态
+    //     collapsed - 触发器折叠视觉状态
 
+    // 定义动画完成后的回调函数
     var complete = function () {
       this.$element
-        .removeClass('collapsing')
-        .addClass('collapse in')[dimension]('');
-      this.transitioning = 0;
+        .removeClass('collapsing')      // 移除动画类
+        .addClass('collapse in')[dimension]('');      // 添加展开完成类；恢复自动尺寸（移除内联样式）
+      this.transitioning = 0;     // 清除动画标志
       this.$element
-        .trigger('shown.bs.collapse')
+        .trigger('shown.bs.collapse')     // 触发展开完成事件
     };
 
+    // 浏览器兼容性处理：如果不支持CSS过渡，直接执行完成回调
     if (!$.support.transition) return complete.call(this);
 
+    // 计算内容实际尺寸：将 'height' 转换为 'scrollHeight', 'width' 转换为 'scrollWidth'
     var scrollSize = $.camelCase(['scroll', dimension].join('-'));
 
+    // 执行CSS过渡动画
     this.$element
-      .one('bsTransitionEnd', $.proxy(complete, this))
-      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      .one('bsTransitionEnd', $.proxy(complete, this))      // 绑定一次性过渡结束事件
+      .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])      // 设置超时保障；动画到实际内容尺寸
   };
 
+  //隐藏折叠内容
   Collapse.prototype.hide = function () {
+    // 安全检查：如果正在动画中或已经处于收起状态，直接返回
     if (this.transitioning || !this.$element.hasClass('in')) return;
 
+    // 触发收起前事件
     var startEvent = $.Event('hide.bs.collapse');
     this.$element.trigger(startEvent);
     if (startEvent.isDefaultPrevented()) return;
 
     var dimension = this.dimension();
 
+    // 强制浏览器重排技巧：先获取再设置相同值，然后读取offsetHeight触发重排
+    // 这确保了CSS动画能够正确开始，避免浏览器优化导致的动画问题
     this.$element[dimension](this.$element[dimension]())[0].offsetHeight;
+    // （总结）强制重排的原理：
+    //     连续进行DOM读写操作，破坏浏览器批处理优化
+    //     确保CSS过渡动画从正确的最新状态开始
+    //     这是解决CSS动画常见问题的经典技巧
 
+    // 准备收起动画
     this.$element
-      .addClass('collapsing')
-      .removeClass('collapse in')
-      .attr('aria-expanded', false);
+      .addClass('collapsing')     // 添加动画类
+      .removeClass('collapse in')     // 移除展开状态类
+      .attr('aria-expanded', false);      // 更新无障碍属性
 
     this.$trigger
-      .addClass('collapsed')
-      .attr('aria-expanded', false);
+      .addClass('collapsed')      // 添加触发器折叠视觉状态
+      .attr('aria-expanded', false);      // 更新触发器无障碍属性
 
-    this.transitioning = 1;
+    this.transitioning = 1;     // 标记动画进行中
 
+    // 动画完成回调函数
     var complete = function () {
-      this.transitioning = 0;
+      this.transitioning = 0;     // 清除动画标志
       this.$element
-        .removeClass('collapsing')
-        .addClass('collapse')
-        .trigger('hidden.bs.collapse')
+        .removeClass('collapsing')      // 移除动画类
+        .addClass('collapse')     // 恢复默认折叠类
+        .trigger('hidden.bs.collapse')      // 触发收起完成事件
     };
 
+    // 浏览器兼容性处理
     if (!$.support.transition) return complete.call(this);
 
+    // 执行收起动画：从当前尺寸动画到0
     this.$element
-      [dimension](0)
+      [dimension](0)      // 设置目标尺寸为0
       .one('bsTransitionEnd', $.proxy(complete, this))
       .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
   };
+  // （总结）收起动画与展开动画的区别：
+  //   展开：从0尺寸 → 内容实际尺寸
+  //   收起：从当前尺寸 → 0尺寸
+  //   事件不同：hide.bs.collapse / hidden.bs.collapse
 
+  //切换折叠状态
   Collapse.prototype.toggle = function () {
+    // 智能状态判断：根据当前是否有 'in' 类决定执行收起还是展开
     this[this.$element.hasClass('in') ? 'hide' : 'show']()
   };
 
+  //父级容器处理：手风琴效果的核心，管理同一组内的折叠项。
   Collapse.prototype.getParent = function () {
     return $(this.options.parent)
+    // 在父容器中查找所有相关触发器
       .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
       .each($.proxy(function (i, element) {
         var $element = $(element);
+        // 为每个触发器设置ARIA属性和状态类
         this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
       }, this))
-      .end()
+      .end()      // 返回父容器jQuery对象
   };
 
+  //无障碍支持：为屏幕阅读器和键盘导航提供支持。
   Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
-    var isOpen = $element.hasClass('in');
+    var isOpen = $element.hasClass('in');     // 检查初始展开状态
 
-    $element.attr('aria-expanded', isOpen);
+    $element.attr('aria-expanded', isOpen);     // 设置内容区域的可访问性属性
     $trigger
-      .toggleClass('collapsed', !isOpen)
-      .attr('aria-expanded', isOpen)
+      .toggleClass('collapsed', !isOpen)      // 切换触发器视觉状态
+      .attr('aria-expanded', isOpen)      // 设置触发器的可访问性属性
   };
 
+  //目标解析：从触发器的data-target或href属性获取目标折叠元素。
   function getTargetFromTrigger($trigger) {
     var href;
+    // 解析触发器指向的目标元素
     var target = $trigger.attr('data-target')
-      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // strip for ie7
+      || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, ''); // 清理IE7的href
 
-    return $(target)
+    return $(target)      // 返回目标元素的jQuery对象
   }
 
 
   // COLLAPSE PLUGIN DEFINITION
   // ==========================
 
+  //3. jQuery插件定义
   function Plugin(option) {
     return this.each(function () {
       var $this   = $(this);
       var data    = $this.data('bs.collapse');
       var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option);
 
+      // 特殊处理：如果通过show/hide方法初始化，禁用自动toggle
       if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false;
       if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)));
-      if (typeof option == 'string') data[option]()
+      if (typeof option == 'string') data[option]()     // 执行指定方法
     })
   }
 
+  // 保存旧的$.fn.collapse引用
   var old = $.fn.collapse;
 
+  // 注册jQuery插件
   $.fn.collapse             = Plugin;
   $.fn.collapse.Constructor = Collapse;
 
@@ -725,28 +973,34 @@ if (typeof jQuery === 'undefined') {
   // COLLAPSE NO CONFLICT
   // ====================
 
+  // 解决命名冲突
   $.fn.collapse.noConflict = function () {
-    $.fn.collapse = old;
-    return this
+    $.fn.collapse = old;      // 恢复原来的$.fn.collapse
+    return this     // 返回当前插件
   };
 
 
   // COLLAPSE DATA-API
   // =================
 
+  // 通过数据属性自动初始化
   $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
-    var $this   = $(this);
+    var $this   = $(this);      // 点击的触发器
 
+    // 如果没有data-target，阻止默认行为（如链接跳转）
     if (!$this.attr('data-target')) e.preventDefault();
 
+    // 获取目标折叠元素
     var $target = getTargetFromTrigger($this);
-    var data    = $target.data('bs.collapse');
-    var option  = data ? 'toggle' : $this.data();
+    var data    = $target.data('bs.collapse');      // 获取实例数据
+    var option  = data ? 'toggle' : $this.data();     // 已有实例则切换，否则初始化
 
+    // 初始化或调用折叠插件
     Plugin.call($target, option)
   })
 
 }(jQuery);
+//模块五展示了如何实现复杂的交互式UI组件，特别注重用户体验和可访问性。
 
 /* ========================================================================
  * Bootstrap: dropdown.js v3.3.7
@@ -757,158 +1011,238 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块六：Dropdown（下拉菜单）
 +function ($) {
   'use strict';
 
   // DROPDOWN CLASS DEFINITION
   // =========================
 
-  var backdrop = '.dropdown-backdrop';
-  var toggle   = '[data-toggle="dropdown"]';
+  //1. 下拉菜单类定义与常量
+  var backdrop = '.dropdown-backdrop';      // 下拉菜单背景层选择器
+  var toggle   = '[data-toggle="dropdown"]';      // 下拉菜单触发器选择器
+  
+  // Dropdown构造函数
   var Dropdown = function (element) {
+    // 为元素绑定点击事件，使用命名空间避免冲突
     $(element).on('click.bs.dropdown', this.toggle)
   };
 
-  Dropdown.VERSION = '3.3.7';
+  Dropdown.VERSION = '3.3.7';     // 组件版本号
 
+  //2. 核心辅助函数
   function getParent($this) {
-    var selector = $this.attr('data-target');
+    // 获取下拉菜单的目标父容器
+    var selector = $this.attr('data-target');      // 获取data-target属性
 
+    // 如果没有data-target，尝试从href属性获取
     if (!selector) {
-      selector = $this.attr('href');
+      selector = $this.attr('href');      // 获取href
+      // 验证并清理href，确保是有效的ID选择器（处理IE7兼容性）
       selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
     }
 
+    // 根据选择器获取父级元素
     var $parent = selector && $(selector);
 
+    // 返回找到的父容器，如果没找到则返回直接父元素
     return $parent && $parent.length ? $parent : $this.parent()
   }
+  //（总结）getParent函数作用：
+  //     支持两种目标定位方式：data-target 和 href
+  //     提供回退机制，确保总能找到有效的父容器
+  //     处理IE7的href兼容性问题
 
+  // 清除所有已打开的下拉菜单
   function clearMenus(e) {
+    // 如果是鼠标右键点击（which === 3），不关闭菜单
     if (e && e.which === 3) return;
-    $(backdrop).remove();
-    $(toggle).each(function () {
-      var $this         = $(this);
-      var $parent       = getParent($this);
-      var relatedTarget = { relatedTarget: this };
 
+    // 移除所有下拉菜单背景层
+    $(backdrop).remove();
+
+    // 遍历所有下拉菜单触发器
+    $(toggle).each(function () {
+      var $this         = $(this);      // 当前触发器
+      var $parent       = getParent($this);     // 获取对应的下拉菜单容器
+      var relatedTarget = { relatedTarget: this };      // 事件相关目标
+
+      // 如果下拉菜单已经是关闭状态，跳过处理
       if (!$parent.hasClass('open')) return;
 
+      // 特殊处理：如果点击发生在输入框内且输入框在下拉菜单内，不关闭菜单
       if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return;
 
+      // 触发隐藏前事件，允许取消
       $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget));
 
+      // 如果事件被阻止，停止执行
       if (e.isDefaultPrevented()) return;
 
+      // 更新无障碍访问属性
       $this.attr('aria-expanded', 'false');
+      // 关闭下拉菜单并触发隐藏完成事件
       $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
     })
   }
+  // （总结）clearMenus函数核心功能：
+  //     全局菜单管理：关闭所有打开的下拉菜单
+  //     右键保护：防止右键点击意外关闭菜单
+  //     输入框保护：在菜单内的输入框中点击不关闭菜单
+  //     事件系统：提供完整的隐藏生命周期事件
+  //     无障碍支持：正确更新ARIA属性
 
+  //3. 下拉菜单原型方法
+  // 切换下拉菜单的显示/隐藏
   Dropdown.prototype.toggle = function (e) {
-    var $this = $(this);
+    var $this = $(this);      // 当前触发器
 
+    // 如果触发器被禁用，直接返回
     if ($this.is('.disabled, :disabled')) return;
 
-    var $parent  = getParent($this);
-    var isActive = $parent.hasClass('open');
+    var $parent  = getParent($this);      // 获取下拉菜单容器
+    var isActive = $parent.hasClass('open');      // 检查当前是否已打开
 
+    // 先关闭所有其他打开的下拉菜单
     clearMenus();
+    // （总结）toggle方法初始逻辑：
+    //   禁用状态检查，提高用户体验
+    //   获取正确的菜单容器
+    //   清理其他菜单，确保同时只有一个菜单打开
 
+    // 如果当前菜单未打开
     if (!isActive) {
+      // 如果是移动设备且不在导航栏内，创建背景层
       if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
-        // if mobile we use a backdrop because click events don't delegate
-        $(document.createElement('div'))
-          .addClass('dropdown-backdrop')
-          .insertAfter($(this))
-          .on('click', clearMenus)
+        // 创建下拉菜单背景层
+        $(document.createElement('div'))      
+          .addClass('dropdown-backdrop')      // 添加背景层类
+          .insertAfter($(this))     // 插入到触发器后面
+          .on('click', clearMenus)      // 点击背景层关闭所有菜单
       }
 
+      // 准备事件相关数据
       var relatedTarget = { relatedTarget: this };
+      // 触发展开前事件
       $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget));
 
-      if (e.isDefaultPrevented()) return;
+      if (e.isDefaultPrevented()) return;     // 如果事件被取消，停止执行
 
+      // 聚焦触发器并更新无障碍属性
       $this
-        .trigger('focus')
-        .attr('aria-expanded', 'true');
+        .trigger('focus')     // 触发focus事件
+        .attr('aria-expanded', 'true');     // 设置展开状态
 
-      $parent
-        .toggleClass('open')
-        .trigger($.Event('shown.bs.dropdown', relatedTarget))
+      // 打开下拉菜单并触发展开完成事件
+        $parent
+        .toggleClass('open')      // 切换open类
+        .trigger($.Event('shown.bs.dropdown', relatedTarget))     // 触发显示完成事件
     }
 
-    return false
+    return false      // 阻止默认行为和事件冒泡
   };
+  // （总结）toggle方法展开逻辑：
+  //     移动端适配：使用背景层解决触摸事件冒泡问题
+  //     导航栏例外：导航栏内的下拉菜单不使用背景层
+  //     事件生命周期：show.bs.dropdown → 展开 → shown.bs.dropdown
+  //     无障碍支持：正确管理焦点和ARIA属性
 
+  // 键盘事件处理
   Dropdown.prototype.keydown = function (e) {
+    // 只处理特定按键（上、下、ESC、空格）且不在输入框中
     if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return;
 
     var $this = $(this);
 
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault();     // 阻止默认行为
+    e.stopPropagation();      // 停止事件传播
 
+    // 禁用状态检查，如果元素被禁用，直接返回
     if ($this.is('.disabled, :disabled')) return;
 
+    // 获取父级下拉菜单
     var $parent  = getParent($this);
+    // 检查是否已打开
     var isActive = $parent.hasClass('open');
+    // （总结）键盘导航初始处理：
+    //   按键过滤：只处理方向键、ESC键、空格键
+    //   输入框排除：在输入框中不处理这些按键
+    //   事件控制：阻止默认行为和冒泡
 
+    // ESC键处理：关闭已打开的菜单，或打开未打开的菜单
     if (!isActive && e.which != 27 || isActive && e.which == 27) {
-      if (e.which == 27) $parent.find(toggle).trigger('focus');
-      return $this.trigger('click')
+      if (e.which == 27) $parent.find(toggle).trigger('focus');     // ESC键时聚焦触发器
+      return $this.trigger('click')     // 模拟点击事件
     }
 
-    var desc = ' li:not(.disabled):visible a';
+    // 获取所有可用的菜单项
+    var desc = ' li:not(.disabled):visible a';      // 选择器：非禁用、可见的链接
     var $items = $parent.find('.dropdown-menu' + desc);
 
-    if (!$items.length) return;
+    if (!$items.length) return;     // 如果没有菜单项，直接返回
 
-    var index = $items.index(e.target);
+    var index = $items.index(e.target);     // 获取当前焦点项的索引
 
+    // 键盘导航逻辑
     if (e.which == 38 && index > 0)                 index--;         // up
+    // 上箭头：向上移动
     if (e.which == 40 && index < $items.length - 1) index++;         // down
+    // 下箭头：向下移动
     if (!~index)                                    index = 0;
+    // 如果没有选中项，选择第一个
 
-    $items.eq(index).trigger('focus')
+    $items.eq(index).trigger('focus')     // 聚焦到目标菜单项
   };
-
+  // （总结）键盘导航详细逻辑：
+  //     ESC键智能处理：关闭打开菜单或打开关闭菜单
+  //     焦点管理：ESC键时正确返回焦点到触发器
+  //     菜单项遍历：支持上下箭头在菜单项间导航
+  //     边界处理：在第一个和最后一个菜单项处停止
+  //     禁用项跳过：自动跳过被禁用的菜单项
 
   // DROPDOWN PLUGIN DEFINITION
   // ==========================
 
+  //4. jQuery插件定义
   function Plugin(option) {
     return this.each(function () {
       var $this = $(this);
-      var data  = $this.data('bs.dropdown');
+      var data  = $this.data('bs.dropdown');      // 从数据缓存获取实例
 
+      // 单例模式：确保每个元素只有一个Dropdown实例
       if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)));
-      if (typeof option == 'string') data[option].call($this)
+      if (typeof option == 'string') data[option].call($this)     // 调用指定方法
     })
   }
 
-  var old = $.fn.dropdown;
+  var old = $.fn.dropdown;      // 保存原有dropdown方法
 
-  $.fn.dropdown             = Plugin;
-  $.fn.dropdown.Constructor = Dropdown;
+  $.fn.dropdown             = Plugin;     // 定义jQuery插件
+  $.fn.dropdown.Constructor = Dropdown;     // 暴露构造函数
 
 
   // DROPDOWN NO CONFLICT
   // ====================
 
+  // 防冲突方法
   $.fn.dropdown.noConflict = function () {
-    $.fn.dropdown = old;
-    return this
+    $.fn.dropdown = old;      // 恢复原有dropdown方法
+    return this     // 返回当前插件实例
   };
 
 
   // APPLY TO STANDARD DROPDOWN ELEMENTS
   // ===================================
 
+  //5. 数据API自动初始化
   $(document)
+  // 点击页面任意位置关闭所有下拉菜单
     .on('click.bs.dropdown.data-api', clearMenus)
+    // 阻止下拉菜单内表单的点击事件冒泡（防止意外关闭菜单）
     .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+    // 为所有下拉菜单触发器绑定点击事件
     .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+    // 为触发器和菜单绑定键盘事件
     .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
     .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
 
@@ -923,248 +1257,307 @@ if (typeof jQuery === 'undefined') {
  * ======================================================================== */
 
 
+//模块七：Modal（模态框）
 +function ($) {
   'use strict';
 
   // MODAL CLASS DEFINITION
   // ======================
 
+  //1. 模态框类定义与初始化
+  //构造函数：初始化模态框实例，处理远程内容加载。
   var Modal = function (element, options) {
-    this.options             = options;
-    this.$body               = $(document.body);
-    this.$element            = $(element);
-    this.$dialog             = this.$element.find('.modal-dialog');
-    this.$backdrop           = null;
-    this.isShown             = null;
-    this.originalBodyPad     = null;
-    this.scrollbarWidth      = 0;
-    this.ignoreBackdropClick = false;
+    this.options             = options;     // 配置选项
+    this.$body               = $(document.body);      // 页面body元素
+    this.$element            = $(element);      // 模态框容器
+    this.$dialog             = this.$element.find('.modal-dialog');     // 模态框对话框
+    this.$backdrop           = null;      // 背景遮罩层
+    this.isShown             = null;      // 显示状态标志
+    this.originalBodyPad     = null;      // 原始body内边距
+    this.scrollbarWidth      = 0;     // 滚动条宽度
+    this.ignoreBackdropClick = false;     // 忽略背景点击标志
 
+    // 远程内容加载：如果配置了remote选项，通过AJAX加载内容
     if (this.options.remote) {
       this.$element
         .find('.modal-content')
         .load(this.options.remote, $.proxy(function () {
-          this.$element.trigger('loaded.bs.modal')
+          this.$element.trigger('loaded.bs.modal')      // 触发内容加载完成事件
         }, this))
     }
   };
 
-  Modal.VERSION  = '3.3.7';
+  Modal.VERSION  = '3.3.7';     // 组件版本号
 
-  Modal.TRANSITION_DURATION = 300;
-  Modal.BACKDROP_TRANSITION_DURATION = 150;
+  Modal.TRANSITION_DURATION = 300;      // 模态框动画持续时间
+  Modal.BACKDROP_TRANSITION_DURATION = 150;     // 背景遮罩动画持续时间   
 
+   // 默认配置
   Modal.DEFAULTS = {
-    backdrop: true,
-    keyboard: true,
-    show: true
+    backdrop: true,     // 是否显示背景遮罩
+    keyboard: true,     // 是否支持ESC键关闭
+    show: true      // 初始化后是否立即显示
   };
 
+  //2. 核心显示方法
+  //显示准备阶段：状态设置、事件绑定、滚动条处理。
   Modal.prototype.toggle = function (_relatedTarget) {
+    // 根据当前状态调用show或hide方法
     return this.isShown ? this.hide() : this.show(_relatedTarget)
   };
 
+  // 显示模态框
   Modal.prototype.show = function (_relatedTarget) {
-    var that = this;
+    var that = this;      // 保存this引用
+    // 触发展示前事件，传递相关目标（触发元素）
     var e    = $.Event('show.bs.modal', { relatedTarget: _relatedTarget });
 
+    // 触发显示开始事件
     this.$element.trigger(e);
 
+    // 如果已经在显示或事件被取消，直接返回
     if (this.isShown || e.isDefaultPrevented()) return;
 
-    this.isShown = true;
+    this.isShown = true;      // 设置显示状态
 
-    this.checkScrollbar();
+    // 滚动条处理：防止页面抖动
+    this.checkScrollbar();    
     this.setScrollbar();
-    this.$body.addClass('modal-open');
+    this.$body.addClass('modal-open');      // 给body添加类，防止背景滚动
 
-    this.escape();
-    this.resize();
+    this.escape();      // 绑定ESC键事件
+    this.resize();      // 绑定窗口调整事件
 
+    // 绑定关闭按钮点击事件
     this.$element.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', $.proxy(this.hide, this));
 
+    // 处理背景点击：防止快速点击导致的意外关闭
+    //点击处理优化：防止鼠标拖拽操作误触发关闭。
     this.$dialog.on('mousedown.dismiss.bs.modal', function () {
       that.$element.one('mouseup.dismiss.bs.modal', function (e) {
+        // 如果鼠标在模态框内按下并在模态框外释放，忽略此次背景点击
         if ($(e.target).is(that.$element)) that.ignoreBackdropClick = true
       })
     });
 
+    // 显示背景遮罩，完成后执行回调
     this.backdrop(function () {
       var transition = $.support.transition && that.$element.hasClass('fade');
 
+      // 确保模态框在DOM中的正确位置
       if (!that.$element.parent().length) {
-        that.$element.appendTo(that.$body) // don't move modals dom position
+        that.$element.appendTo(that.$body)      // 不移动模态框的DOM位置
       }
 
+      // 显示模态框并滚动到顶部
       that.$element
-        .show()
-        .scrollTop(0);
+        .show()     // 显示模态框
+        .scrollTop(0);      // 滚动到顶部
 
-      that.adjustDialog();
+      that.adjustDialog();      // 调整对话框位置
 
+      // 强制重排，触发CSS过渡动画
+      //动画执行阶段：处理显示动画和焦点管理。
       if (transition) {
         that.$element[0].offsetWidth // force reflow
       }
 
-      that.$element.addClass('in');
+      that.$element.addClass('in');     // 添加显示类，触发动画
 
-      that.enforceFocus();
+      that.enforceFocus();      // 强制焦点保持在模态框内
 
+      // 创建显示完成事件
       var e = $.Event('shown.bs.modal', { relatedTarget: _relatedTarget });
 
+      // 根据是否支持过渡动画分别处理
       transition ?
-        that.$dialog // wait for modal to slide in
+        that.$dialog /// 等待模态框滑入动画完成
           .one('bsTransitionEnd', function () {
-            that.$element.trigger('focus').trigger(e)
+            that.$element.trigger('focus').trigger(e)     // 触发焦点和完成事件
           })
-          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-        that.$element.trigger('focus').trigger(e)
+          .emulateTransitionEnd(Modal.TRANSITION_DURATION) :      // 模拟过渡结束
+        that.$element.trigger('focus').trigger(e)     // 无动画直接触发
     })
   };
 
+  //3. 核心隐藏方法
+  //隐藏逻辑：清理事件、执行隐藏动画。
   Modal.prototype.hide = function (e) {
-    if (e) e.preventDefault();
+    if (e) e.preventDefault();      // 阻止默认行为
 
-    e = $.Event('hide.bs.modal');
+    e = $.Event('hide.bs.modal');     // 触发隐藏前事件
 
     this.$element.trigger(e);
 
+    // 如果未在显示或事件被取消，直接返回
     if (!this.isShown || e.isDefaultPrevented()) return;
 
-    this.isShown = false;
+    this.isShown = false;     // 设置隐藏状态
 
-    this.escape();
-    this.resize();
+    this.escape();      // 移除ESC键事件
+    this.resize();      // 移除调整大小事件
 
-    $(document).off('focusin.bs.modal');
+    $(document).off('focusin.bs.modal');      // 移除焦点强制事件
 
+    // 移除事件监听器和显示类
     this.$element
-      .removeClass('in')
-      .off('click.dismiss.bs.modal')
-      .off('mouseup.dismiss.bs.modal');
+      .removeClass('in')      // 移除显示类
+      .off('click.dismiss.bs.modal')      // 移除点击关闭事件
+      .off('mouseup.dismiss.bs.modal');     // 移除鼠标释放事件
 
-    this.$dialog.off('mousedown.dismiss.bs.modal');
+    this.$dialog.off('mousedown.dismiss.bs.modal');     // 移除鼠标按下事件
 
+    // 根据是否支持过渡动画执行隐藏
     $.support.transition && this.$element.hasClass('fade') ?
       this.$element
-        .one('bsTransitionEnd', $.proxy(this.hideModal, this))
+        .one('bsTransitionEnd', $.proxy(this.hideModal, this))      // 动画完成后隐藏
         .emulateTransitionEnd(Modal.TRANSITION_DURATION) :
-      this.hideModal()
+      this.hideModal()      // 无动画直接隐藏
   };
 
+  //4. 焦点管理与事件处理
+  //焦点强制：确保用户无法通过Tab键将焦点移出模态框。
   Modal.prototype.enforceFocus = function () {
     $(document)
-      .off('focusin.bs.modal') // guard against infinite focus loop
+      .off('focusin.bs.modal') // 防止无限焦点循环
       .on('focusin.bs.modal', $.proxy(function (e) {
+        // 如果焦点不在文档、模态框本身或模态框内的元素上
         if (document !== e.target &&
             this.$element[0] !== e.target &&
             !this.$element.has(e.target).length) {
-          this.$element.trigger('focus')
+          this.$element.trigger('focus')      // 强制焦点回到模态框
         }
       }, this))
   };
 
+  //键盘支持：ESC键关闭功能。
   Modal.prototype.escape = function () {
     if (this.isShown && this.options.keyboard) {
+      // 显示状态且启用键盘：绑定ESC键关闭
       this.$element.on('keydown.dismiss.bs.modal', $.proxy(function (e) {
-        e.which == 27 && this.hide()
+        e.which == 27 && this.hide()      // ESC键隐藏
       }, this))
     } else if (!this.isShown) {
+      // 隐藏状态：移除键盘事件
       this.$element.off('keydown.dismiss.bs.modal')
     }
   };
 
+  // 窗口大小调整处理
   Modal.prototype.resize = function () {
+    // 如果显示状态，绑定窗口大小调整事件
     if (this.isShown) {
       $(window).on('resize.bs.modal', $.proxy(this.handleUpdate, this))
     } else {
+      // 如果隐藏状态，移除窗口大小调整事件
       $(window).off('resize.bs.modal')
     }
   };
 
+  //隐藏完成处理：清理DOM状态，触发完成事件。
   Modal.prototype.hideModal = function () {
     var that = this;
-    this.$element.hide();
+    this.$element.hide();     // 隐藏模态框
     this.backdrop(function () {
-      that.$body.removeClass('modal-open');
-      that.resetAdjustments();
-      that.resetScrollbar();
-      that.$element.trigger('hidden.bs.modal')
+      that.$body.removeClass('modal-open');     // 移除body类，恢复滚动
+      that.resetAdjustments();      // 重置调整
+      that.resetScrollbar();      // 重置滚动条
+      that.$element.trigger('hidden.bs.modal')      // 触发隐藏完成事件
     })
   };
 
+  // 移除背景层
   Modal.prototype.removeBackdrop = function () {
-    this.$backdrop && this.$backdrop.remove();
-    this.$backdrop = null
+    this.$backdrop && this.$backdrop.remove();      // 移除背景层元素
+    this.$backdrop = null     // 清空引用
   };
 
+  //5. 背景遮罩管理
+  //背景遮罩创建：处理背景点击逻辑。
   Modal.prototype.backdrop = function (callback) {
     var that = this;
-    var animate = this.$element.hasClass('fade') ? 'fade' : '';
+    // 根据模态框是否有fade类决定是否使用动画
+    var animate = this.$element.hasClass('fade') ? 'fade' : '';     // 动画类
 
+    // 如果需要显示背景层且模态框正在显示
     if (this.isShown && this.options.backdrop) {
-      var doAnimate = $.support.transition && animate;
+      var doAnimate = $.support.transition && animate;      // 是否执行动画
 
+      // 创建背景遮罩
       this.$backdrop = $(document.createElement('div'))
         .addClass('modal-backdrop ' + animate)
         .appendTo(this.$body);
 
-      this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
+      // 背景点击事件处理
+        this.$element.on('click.dismiss.bs.modal', $.proxy(function (e) {
         if (this.ignoreBackdropClick) {
-          this.ignoreBackdropClick = false;
+          this.ignoreBackdropClick = false;    // 重置忽略标志 
           return
         }
-        if (e.target !== e.currentTarget) return;
+        if (e.target !== e.currentTarget) return;     // 确保点击的是背景本身
         this.options.backdrop == 'static'
-          ? this.$element[0].focus()
-          : this.hide()
+          ? this.$element[0].focus()      // 静态背景：只聚焦不关闭
+          : this.hide()     // 非静态背景：关闭模态框
       }, this));
 
-      if (doAnimate) this.$backdrop[0].offsetWidth; // force reflow
+      // 背景显示动画
+      //背景动画处理：完整的显示/隐藏动画管理。
+      if (doAnimate) this.$backdrop[0].offsetWidth;       // 强制重排
 
-      this.$backdrop.addClass('in');
+      this.$backdrop.addClass('in');      // 显示背景
 
       if (!callback) return;
 
+      // 根据动画支持执行回调
       doAnimate ?
         this.$backdrop
-          .one('bsTransitionEnd', callback)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callback()
+          .one('bsTransitionEnd', callback)     // 动画结束后执行回调
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :     // 模拟过渡结束
+        callback()      // 直接执行回调
 
     } else if (!this.isShown && this.$backdrop) {
-      this.$backdrop.removeClass('in');
+      // 隐藏背景
+      this.$backdrop.removeClass('in');     // 移除显示类
 
+      // 定义移除背景层的回调函数
       var callbackRemove = function () {
-        that.removeBackdrop();
-        callback && callback()
+        that.removeBackdrop();      // 移除背景层
+        callback && callback()      // 执行回调
       };
+
+      // 根据是否支持动画执行不同的移除逻辑
+      // 背景隐藏动画
       $.support.transition && this.$element.hasClass('fade') ?
         this.$backdrop
-          .one('bsTransitionEnd', callbackRemove)
-          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :
-        callbackRemove()
+          .one('bsTransitionEnd', callbackRemove)     // 动画结束后移除
+          .emulateTransitionEnd(Modal.BACKDROP_TRANSITION_DURATION) :     // 模拟过渡结束
+        callbackRemove()  // 直接移除    
 
     } else if (callback) {
-      callback()
+      callback()      // 直接执行回调
     }
   };
 
-  // these following methods are used to handle overflowing modals
+  // 以下方法用于处理模态框溢出情况
 
+  // 处理更新（窗口大小变化时调用）
   Modal.prototype.handleUpdate = function () {
-    this.adjustDialog()
+    this.adjustDialog()     // 调整对话框
   };
 
+  // 调整对话框位置
   Modal.prototype.adjustDialog = function () {
+    // 检查模态框内容是否溢出视口
     var modalIsOverflowing = this.$element[0].scrollHeight > document.documentElement.clientHeight;
 
+    // 根据溢出情况调整左右padding
     this.$element.css({
       paddingLeft:  !this.bodyIsOverflowing && modalIsOverflowing ? this.scrollbarWidth : '',
       paddingRight: this.bodyIsOverflowing && !modalIsOverflowing ? this.scrollbarWidth : ''
     })
   };
 
+  // 重置调整
   Modal.prototype.resetAdjustments = function () {
     this.$element.css({
       paddingLeft: '',
@@ -1172,19 +1565,25 @@ if (typeof jQuery === 'undefined') {
     })
   };
 
+  //6. 滚动条处理（防止页面抖动）
+  //滚动条检测：判断页面是否有滚动条。
   Modal.prototype.checkScrollbar = function () {
     var fullWindowWidth = window.innerWidth;
-    if (!fullWindowWidth) { // workaround for missing window.innerWidth in IE8
+    // IE8兼容性处理
+    if (!fullWindowWidth) {
       var documentElementRect = document.documentElement.getBoundingClientRect();
       fullWindowWidth = documentElementRect.right - Math.abs(documentElementRect.left)
     }
+    // 检查body是否出现滚动条
     this.bodyIsOverflowing = document.body.clientWidth < fullWindowWidth;
-    this.scrollbarWidth = this.measureScrollbar()
+    this.scrollbarWidth = this.measureScrollbar()     // 测量滚动条宽度
   };
 
+  //滚动条补偿：通过padding补偿滚动条占用的空间。
   Modal.prototype.setScrollbar = function () {
     var bodyPad = parseInt((this.$body.css('padding-right') || 0), 10);
     this.originalBodyPad = document.body.style.paddingRight || '';
+    // 如果body有滚动条，增加padding防止页面抖动
     if (this.bodyIsOverflowing) this.$body.css('padding-right', bodyPad + this.scrollbarWidth)
   };
 
@@ -1192,12 +1591,14 @@ if (typeof jQuery === 'undefined') {
     this.$body.css('padding-right', this.originalBodyPad)
   };
 
+  //滚动条测量：精确计算滚动条宽度。
   Modal.prototype.measureScrollbar = function () { // thx walsh
+    // 创建测量元素计算滚动条宽度
     var scrollDiv = document.createElement('div');
     scrollDiv.className = 'modal-scrollbar-measure';
     this.$body.append(scrollDiv);
-    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-    this.$body[0].removeChild(scrollDiv);
+    var scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;     // 计算宽度差
+    this.$body[0].removeChild(scrollDiv);     // 清理测量元素
     return scrollbarWidth
   };
 
@@ -1205,20 +1606,26 @@ if (typeof jQuery === 'undefined') {
   // MODAL PLUGIN DEFINITION
   // =======================
 
+  // 插件主函数
   function Plugin(option, _relatedTarget) {
     return this.each(function () {
-      var $this   = $(this);
-      var data    = $this.data('bs.modal');
-      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option);
+      var $this   = $(this);      // 当前元素
+      var data    = $this.data('bs.modal');     // 从数据缓存获取实例
+      var options = $.extend({}, Modal.DEFAULTS, $this.data(), typeof option == 'object' && option);      // 合并配置
 
+      // 如果没有初始化过，创建新实例并缓存
       if (!data) $this.data('bs.modal', (data = new Modal(this, options)));
+      // 如果option是字符串，调用对应方法
       if (typeof option == 'string') data[option](_relatedTarget);
+      // 如果配置了show，立即显示模态框
       else if (options.show) data.show(_relatedTarget)
     })
   }
 
+  // 保存旧的$.fn.modal引用
   var old = $.fn.modal;
 
+  // 注册jQuery插件
   $.fn.modal             = Plugin;
   $.fn.modal.Constructor = Modal;
 
@@ -1226,33 +1633,39 @@ if (typeof jQuery === 'undefined') {
   // MODAL NO CONFLICT
   // =================
 
+  // 解决命名冲突
   $.fn.modal.noConflict = function () {
-    $.fn.modal = old;
-    return this
+    $.fn.modal = old;     // 恢复原来的$.fn.modal
+    return this     // 返回当前插件
   };
 
 
   // MODAL DATA-API
   // ==============
 
+  //7. 数据API自动初始化
   $(document).on('click.bs.modal.data-api', '[data-toggle="modal"]', function (e) {
     var $this   = $(this);
     var href    = $this.attr('href');
+    // 解析目标模态框
     var $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))); // strip for ie7
+    // 构建选项：如果已有实例则切换，否则初始化
     var option  = $target.data('bs.modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data());
 
-    if ($this.is('a')) e.preventDefault();
+    if ($this.is('a')) e.preventDefault();      // 阻止链接跳转
 
+    // 焦点恢复：模态框关闭后将焦点返回到触发元素
     $target.one('show.bs.modal', function (showEvent) {
       if (showEvent.isDefaultPrevented()) return; // only register focus restorer if modal will actually get shown
       $target.one('hidden.bs.modal', function () {
         $this.is(':visible') && $this.trigger('focus')
       })
     });
-    Plugin.call($target, option, this)
+    Plugin.call($target, option, this)      // 调用插件
   })
 
 }(jQuery);
+//模块七展示了如何构建一个企业级的模态框组件，特别注重用户体验、可访问性和浏览器兼容性。
 
 /* ========================================================================
  * Bootstrap: tooltip.js v3.3.7

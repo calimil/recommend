@@ -1,0 +1,724 @@
+<!--#易惜：新增页面-->
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="text-center">{{ title }}</h2>
+
+            <!-- 筛选表单 -->
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    #修改
+                    <form class="form-inline" action="" method="post" id="trendForm" novalidate>
+                        {% csrf_token %}
+                        <!-- 学校名称输入框 -->
+                        <div class="form-group" style="margin-right: 15px; margin-bottom: 10px;">
+                            <label for="school_name_input">{{ trend_form.school_name.label }}：</label>
+                            <div class="custom-dropdown" style="display: inline-block; position: relative; width: 200px;">
+                                <input type="text"
+                                       class="form-control"
+                                       id="school_name_input"
+                                       name="school_name"
+                                       value="{{ trend_form.school_name.value|default_if_none:'' }}"
+                                       placeholder="请填写或选择名称"
+                                       autocomplete="off"
+                                       style="width: 100%;">
+                                <div class="dropdown-menu" id="school_dropdown_menu" style="display: none;">
+                                    <div class="dropdown-list" style="max-height: 200px; overflow-y: auto;">
+                                        {% for school in all_schools %}
+                                        <div class="dropdown-item" data-value="{{ school }}">{{ school }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 专业名称输入框 -->
+                        <div class="form-group" style="margin-right: 15px; margin-bottom: 10px;">
+                            <label for="profession_name_input">{{ trend_form.profession_name.label }}：</label>
+                            <div class="custom-dropdown" style="display: inline-block; position: relative; width: 200px;">
+                                <input type="text"
+                                       class="form-control"
+                                       id="profession_name_input"
+                                       name="profession_name"
+                                       value="{{ trend_form.profession_name.value|default_if_none:'' }}"
+                                       placeholder="请先选择学校"
+                                       autocomplete="off"
+                                       style="width: 100%;"
+                                       disabled>
+                                <div class="dropdown-menu" id="profession_dropdown_menu" style="display: none;">
+                                    <div class="dropdown-list" style="max-height: 200px; overflow-y: auto;">
+                                        <!-- 专业选项将通过JavaScript动态加载 -->
+                                    </div>
+                                </div>
+                                <!-- 提示信息区域 - 使用绝对定位悬浮显示 -->
+                                <div id="profession_message" style="display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 2px; font-size: 12px; color: #28a745; z-index: 1000;"></div>
+                            </div>
+                        </div>
+
+                        <!-- 起始年份 -->
+                        <div class="form-group" style="margin-right: 15px; margin-bottom: 10px;">
+                            {{ trend_form.start_year.label }}：
+                            {{ trend_form.start_year }}
+                        </div>
+
+                        <!-- 结束年份 -->
+                        <div class="form-group" style="margin-right: 15px; margin-bottom: 10px;">
+                            {{ trend_form.end_year.label }}：
+                            {{ trend_form.end_year }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="margin-right: 10px;">查询</button>
+                        <button type="button" class="btn btn-default" id="clearBtn">清空条件</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 图表展示 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="text-center">录取分数趋势图</h4>
+                </div>
+                <div class="panel-body">
+                    {% if not can_draw %}
+                        <div class="alert alert-warning text-center">
+                            请先填写【院校名称、专业名称、起止年份】后再查询趋势图
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            {% for epoch, data in chart_data_dict.items %}
+                            <div class="col-md-6">
+                                <div class="chart-container" style="position: relative; height:300px;">
+                                    <h5 class="text-center">{{ epoch }}</h5>
+                                    <canvas id="chart_{{ forloop.counter }}"></canvas>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 数据表格 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="text-center">详细数据</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>年份</th>
+                                    <th>专业名称</th>
+                                    <th>最高分</th>
+                                    <th>平均分</th>
+                                    <th>最低分</th>
+                                    <th>批次</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for year, data_list in years_data.items %}
+                                    {% for data in data_list %}
+                                    <tr>
+                                        <td>{{ data.year }}</td>
+                                        <td>{{ data.profession_name }}</td>
+                                        <td>{{ data.top_score }}</td>
+                                        <td><strong>{{ data.avg_score }}</strong></td>
+                                        <td>{{ data.lowest_score }}</td>
+                                        <td>{{ data.epoch }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 页面加载完成后执行
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取元素
+    const schoolInput = document.getElementById('school_name_input');
+    const schoolMenu = document.getElementById('school_dropdown_menu');
+    const schoolList = schoolMenu.querySelector('.dropdown-list');
+
+    const professionInput = document.getElementById('profession_name_input');
+    const professionMenu = document.getElementById('profession_dropdown_menu');
+    const professionList = professionMenu.querySelector('.dropdown-list');
+    const professionMessage = document.getElementById('profession_message');
+
+    const clearBtn = document.getElementById('clearBtn');
+    const trendForm = document.getElementById('trendForm');
+
+    // 当前加载的专业列表
+    let currentProfessions = [];
+
+    // 启用专业输入框并加载专业
+    function enableProfessionInputAndLoad(schoolName) {
+        console.log('启用专业输入框，学校:', schoolName);
+
+        // 启用专业输入框
+        professionInput.disabled = false;
+        professionInput.placeholder = '请填写或选择名称';
+
+        // 清空之前选择的专业
+        professionInput.value = '';
+
+        // 清空现有专业选项
+        currentProfessions = [];
+        professionList.innerHTML = '';
+
+        // 显示提示消息在专业输入框下方
+        showProfessionMessage('已选择学校：' + schoolName + '，请选择专业', 'success');
+
+        // 不自动加载专业，等待用户点击时再加载
+    }
+
+    // 在专业输入框下方显示消息
+    function showProfessionMessage(message, type = 'info') {
+        console.log('显示专业消息:', message);
+
+        // 清除之前的消息
+        professionMessage.innerHTML = '';
+        professionMessage.style.display = 'block';
+
+        // 根据类型设置样式
+        if (type === 'success') {
+            professionMessage.style.color = '#28a745';
+            professionMessage.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+            professionMessage.style.border = '1px solid rgba(40, 167, 69, 0.2)';
+        } else if (type === 'error') {
+            professionMessage.style.color = '#dc3545';
+            professionMessage.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+            professionMessage.style.border = '1px solid rgba(220, 53, 69, 0.2)';
+        } else {
+            professionMessage.style.color = '#17a2b8';
+            professionMessage.style.backgroundColor = 'rgba(23, 162, 184, 0.1)';
+            professionMessage.style.border = '1px solid rgba(23, 162, 184, 0.2)';
+        }
+
+        professionMessage.textContent = message;
+        professionMessage.style.padding = '4px 8px';
+        professionMessage.style.borderRadius = '4px';
+        professionMessage.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+
+        // 不设置自动隐藏，由用户点击专业输入框时隐藏
+    }
+
+    // 隐藏专业消息
+    function hideProfessionMessage() {
+        professionMessage.style.display = 'none';
+    }
+
+    // 点击学校下拉菜单项的处理
+    document.addEventListener('click', function(e) {
+        // 如果是学校下拉菜单项被点击
+        if (e.target.classList.contains('dropdown-item') && e.target.closest('#school_dropdown_menu')) {
+            const schoolName = e.target.getAttribute('data-value');
+            console.log('学校下拉菜单项被点击:', schoolName);
+
+            // 设置学校输入框的值
+            schoolInput.value = schoolName;
+
+            // 隐藏下拉菜单
+            schoolMenu.style.display = 'none';
+
+            // 启用专业输入框
+            enableProfessionInputAndLoad(schoolName);
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // 如果是专业下拉菜单项被点击
+        if (e.target.classList.contains('dropdown-item') && e.target.closest('#profession_dropdown_menu')) {
+            const professionName = e.target.getAttribute('data-value');
+            console.log('专业下拉菜单项被点击:', professionName);
+
+            // 设置专业输入框的值
+            professionInput.value = professionName;
+
+            // 隐藏下拉菜单
+            professionMenu.style.display = 'none';
+
+            // 清除提示消息
+            hideProfessionMessage();
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+    // 学校输入框点击/焦点事件 - 显示下拉菜单
+    schoolInput.addEventListener('click', function() {
+        console.log('学校输入框被点击');
+        showSchoolDropdown();
+    });
+
+    schoolInput.addEventListener('focus', function() {
+        console.log('学校输入框获得焦点');
+        showSchoolDropdown();
+    });
+
+    // 显示学校下拉菜单
+    function showSchoolDropdown() {
+        // 显示所有学校
+        showAllSchools();
+
+        // 定位并显示下拉菜单
+        positionDropdown(schoolInput, schoolMenu);
+        schoolMenu.style.display = 'block';
+
+        // 隐藏专业下拉菜单
+        professionMenu.style.display = 'none';
+    }
+
+    // 显示所有学校
+    function showAllSchools() {
+        console.log('显示学校下拉菜单，项目数量:', schoolList.children.length);
+    }
+
+    // 学校输入框输入事件 - 过滤下拉菜单
+    schoolInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        console.log('学校输入框输入:', value);
+
+        if (value) {
+            filterSchoolDropdown(value);
+            // 当用户手动输入学校名称时，也启用专业输入框
+            enableProfessionInputAndLoad(value);
+        } else {
+            // 如果清空了学校输入框，禁用专业输入框
+            professionInput.disabled = true;
+            professionInput.value = '';
+            professionInput.placeholder = '请先选择学校';
+            professionList.innerHTML = '';
+            currentProfessions = [];
+            hideProfessionMessage();
+        }
+    });
+
+    // 过滤学校下拉菜单
+    function filterSchoolDropdown(filterText) {
+        const items = schoolList.querySelectorAll('.dropdown-item');
+        const filter = filterText.toLowerCase();
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(filter)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // 专业输入框点击/焦点事件
+    professionInput.addEventListener('click', function() {
+        if (!this.disabled) {
+            console.log('专业输入框被点击');
+
+            // 隐藏提示消息
+            hideProfessionMessage();
+
+            showProfessionDropdown();
+        }
+    });
+
+    professionInput.addEventListener('focus', function() {
+        if (!this.disabled) {
+            console.log('专业输入框获得焦点');
+
+            // 隐藏提示消息
+            hideProfessionMessage();
+
+            showProfessionDropdown();
+        }
+    });
+
+    // 显示专业下拉菜单
+    function showProfessionDropdown() {
+        const schoolName = schoolInput.value.trim();
+        if (!schoolName) {
+            showProfessionMessage('请先选择学校', 'error');
+            return;
+        }
+
+        if (currentProfessions.length === 0) {
+            // 首次点击，加载专业
+            loadProfessions(schoolName);
+        } else {
+            // 已有专业数据，直接显示
+            positionDropdown(professionInput, professionMenu);
+            professionMenu.style.display = 'block';
+            schoolMenu.style.display = 'none';
+        }
+    }
+
+    // 专业输入框输入事件 - 过滤下拉菜单
+    professionInput.addEventListener('input', function() {
+        if (!this.disabled) {
+            filterProfessionDropdown(this.value);
+        }
+    });
+
+    // 过滤专业下拉菜单
+    function filterProfessionDropdown(filterText) {
+        const filter = filterText.toLowerCase();
+        professionList.innerHTML = '';
+
+        if (currentProfessions.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'dropdown-item';
+            noResults.textContent = '暂无数据，请点击输入框加载';
+            noResults.style.color = '#999';
+            noResults.style.fontStyle = 'italic';
+            professionList.appendChild(noResults);
+            return;
+        }
+
+        const filteredItems = currentProfessions.filter(item =>
+            item.text.toLowerCase().includes(filter)
+        );
+
+        if (filteredItems.length === 0) {
+            const noResults = document.createElement('div');
+            noResults.className = 'dropdown-item';
+            noResults.textContent = '无匹配结果';
+            noResults.style.color = '#999';
+            noResults.style.fontStyle = 'italic';
+            professionList.appendChild(noResults);
+        } else {
+            filteredItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.dataset.value = item.value;
+                div.textContent = item.text;
+                professionList.appendChild(div);
+            });
+        }
+
+        if (professionMenu.style.display !== 'block') {
+            positionDropdown(professionInput, professionMenu);
+            professionMenu.style.display = 'block';
+        }
+    }
+
+    // 加载专业列表
+    function loadProfessions(schoolName) {
+        console.log('加载专业列表，学校:', schoolName);
+
+        // 显示加载提示
+        professionList.innerHTML = '<div class="dropdown-item" style="color: #999; font-style: italic;">加载中...</div>';
+
+        // 显示下拉菜单
+        positionDropdown(professionInput, professionMenu);
+        professionMenu.style.display = 'block';
+
+        fetch(`/get_school_professions/?school_name=${encodeURIComponent(schoolName)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('获取专业数据:', data);
+
+                currentProfessions = [];
+
+                if (data.professions && data.professions.length > 0) {
+                    currentProfessions = data.professions.map(prof => ({
+                        value: prof,
+                        text: prof
+                    }));
+
+                    console.log('加载了专业数量:', currentProfessions.length);
+
+                    // 显示所有专业
+                    professionList.innerHTML = '';
+                    currentProfessions.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'dropdown-item';
+                        div.dataset.value = item.value;
+                        div.textContent = item.text;
+                        professionList.appendChild(div);
+                    });
+                } else {
+                    professionList.innerHTML = '<div class="dropdown-item" style="color: #999; font-style: italic;">该学校暂无专业数据</div>';
+                }
+            })
+            .catch(error => {
+                console.error('获取专业列表失败:', error);
+                professionList.innerHTML = '<div class="dropdown-item" style="color: #dc3545; font-style: italic;">加载失败，请重试</div>';
+            });
+    }
+
+    // 定位下拉菜单
+    function positionDropdown(input, menu) {
+        const rect = input.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (rect.bottom + window.scrollY) + 'px';
+        menu.style.left = (rect.left + window.scrollX) + 'px';
+        menu.style.width = rect.width + 'px';
+        menu.style.zIndex = '1000';
+    }
+
+    // 点击页面其他区域关闭下拉菜单
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+            schoolMenu.style.display = 'none';
+            professionMenu.style.display = 'none';
+        }
+    });
+
+    // 清空按钮点击事件
+    clearBtn.addEventListener('click', function() {
+        console.log('清空按钮点击');
+
+        // 清空表单值
+        schoolInput.value = '';
+        professionInput.value = '';
+        professionInput.disabled = true;
+        professionInput.placeholder = '请先选择学校';
+
+        // 重置状态
+        currentProfessions = [];
+        professionList.innerHTML = '';
+        hideProfessionMessage();
+
+        // 重置年份选择
+        const startYearSelect = document.querySelector('select[name="start_year"]');
+        const endYearSelect = document.querySelector('select[name="end_year"]');
+        if (startYearSelect) startYearSelect.selectedIndex = 0;
+        if (endYearSelect) endYearSelect.selectedIndex = 0;
+
+        // 隐藏下拉菜单
+        schoolMenu.style.display = 'none';
+        professionMenu.style.display = 'none';
+
+        // 提交表单
+        trendForm.submit();
+    });
+
+    // 表单提交前确保专业输入框的值被保留
+    trendForm.addEventListener('submit', function(e) {
+        console.log('表单提交，专业值为:', professionInput.value);
+        // 不需要阻止默认行为，让表单正常提交
+    });
+
+    // 初始加载时，如果有学校名称，启用专业输入框
+    const currentSchool = "{{ trend_form.school_name.value|default_if_none:''|escapejs }}";
+    const currentProfession = "{{ trend_form.profession_name.value|default_if_none:''|escapejs }}";
+
+    console.log('初始加载，当前学校:', currentSchool, '当前专业:', currentProfession);
+
+    if (currentSchool) {
+        // 启用专业输入框但不加载专业数据
+        professionInput.disabled = false;
+        professionInput.placeholder = '请填写或选择名称';
+
+        // 设置已有的专业值
+        if (currentProfession) {
+            professionInput.value = currentProfession;
+        }
+    }
+
+    // 为下拉菜单添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .custom-dropdown {
+            position: relative;
+        }
+        .dropdown-menu {
+            background-color: white;
+            border: 1px solid #000;
+            border-radius: 4px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.175);
+            margin-top: 2px;
+            padding: 5px 0;
+        }
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            white-space: normal;
+            word-wrap: break-word;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+        .dropdown-item:hover {
+            background-color: #f5f5f5 !important;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .dropdown-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        input.form-control {
+            box-shadow: 0 1px 1px rgba(0,0,0,0.075);
+            transition: box-shadow 0.3s ease;
+        }
+        input.form-control:hover, input.form-control:focus {
+            box-shadow: 0 1px 1px rgba(0,0,0,0.075) inset, 0 0 8px rgba(102,175,233,0.6);
+            border-color: #66afe9;
+        }
+        select.form-control {
+            box-shadow: 0 1px 1px rgba(0,0,0,0.075);
+            transition: box-shadow 0.3s ease;
+            max-width: 120px;
+        }
+        select.form-control:hover {
+            box-shadow: 0 1px 1px rgba(0,0,0,0.075) inset, 0 0 8px rgba(102,175,233,0.6);
+        }
+        input.form-control:disabled {
+            background-color: #eee;
+            cursor: not-allowed;
+        }
+        .dropdown-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dropdown-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .dropdown-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        .dropdown-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+{% if can_draw %}
+    // 使用JSON字符串并解析
+    const labels = JSON.parse('{{ chart_labels|escapejs }}');
+    const chartData = JSON.parse('{{ chart_data_json|escapejs }}');
+
+    console.log('Labels:', labels);
+    console.log('Chart Data:', chartData);
+
+    let idx = 1;
+    for (const epoch in chartData) {
+        const ctx = document.getElementById('chart_' + idx);
+        if (!ctx) {
+            console.error('Canvas element not found: chart_' + idx);
+            idx++;
+            continue;
+        }
+
+        const ctx2d = ctx.getContext('2d');
+        const data = chartData[epoch];
+
+        console.log('Epoch:', epoch, 'Data:', data);
+
+        // 准备数据集
+        const datasets = [
+            {
+                label: '最高分',
+                data: data.top,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(255, 99, 132)',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            },
+            {
+                label: '平均分',
+                data: data.avg,
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                borderWidth: 3,
+                borderDash: [5, 5],  // 虚线突出显示平均分
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(54, 162, 235)',
+                pointRadius: 5,
+                pointHoverRadius: 7
+            },
+            {
+                label: '最低分',
+                data: data.low,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointBackgroundColor: 'rgb(75, 192, 192)',
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }
+        ];
+
+        try {
+            new Chart(ctx2d, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: epoch + ' 历年分数线变化'
+                        },
+                        legend: {
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y === null) {
+                                        label += '无数据';
+                                    } else {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: '分数'
+                            },
+                            beginAtZero: false
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '年份'
+                            }
+                        }
+                    },
+                    spanGaps: false  // 不要连接空白数据
+                }
+            });
+            console.log('Chart created for:', epoch);
+        } catch (error) {
+            console.error('Error creating chart for', epoch, ':', error);
+        }
+
+        idx++;
+    }
+{% endif %}
+</script>
+{% endblock %}
