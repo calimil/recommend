@@ -12,6 +12,7 @@
         box-sizing: border-box;
         overflow-x: hidden;
     }
+
     .content-wrapper {
         width: 100%;
         max-width: 100%;
@@ -19,33 +20,37 @@
         box-sizing: border-box;
         margin: 0 auto;
     }
+
     .major-filter-card {
         background: #fff;
         padding: 20px;
         margin: 15px 0 30px;
         border-radius: 8px;
         border: 1px solid #eee;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         width: 100%;
         box-sizing: border-box;
     }
+
     .chart-container-wrapper {
         width: 90%;
         margin: 0 auto;
         box-sizing: border-box;
     }
+
     .chart-card {
         background: #fff;
         padding: 25px;
         border-radius: 8px;
         border: 1px solid #eee;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         width: 100%;
         box-sizing: border-box;
         min-height: 650px;
         display: flex;
         flex-direction: column;
     }
+
     .chart-title {
         text-align: center;
         font-size: 20px;
@@ -56,6 +61,7 @@
         flex-shrink: 0;
         color: #333;
     }
+
     .no-data-tip {
         text-align: center;
         padding: 100px 20px;
@@ -72,50 +78,67 @@
         align-items: center;
         justify-content: center;
     }
+
     canvas.major-chart {
         width: 100% !important;
         height: 550px !important;
         display: block;
         flex-grow: 1;
     }
+
     @media (max-width: 768px) {
         .content-wrapper {
             padding: 0 15px;
         }
+
         .chart-container-wrapper {
             width: 95%;
         }
+
         .chart-card {
             min-height: 600px;
             padding: 20px 15px;
         }
+
         canvas.major-chart {
             height: 500px !important;
         }
+
         .major-filter-card .form-inline {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .major-filter-card .form-group {
             width: 100%;
         }
+
         .major-filter-card .form-control {
             width: 100% !important;
         }
     }
+
     @media (min-width: 1920px) {
         .chart-card {
             min-height: 700px;
         }
+
         canvas.major-chart {
             height: 600px !important;
         }
     }
+
     h2 {
         font-size: 28px !important;
         margin: 30px 0 !important;
         color: #333;
+    }
+
+    #majorCategory,
+    #majorSubcategory {
+        padding: 6px 12px !important;
+        min-width: 120px;
     }
 </style>
 <div class="major-analysis-container">
@@ -128,9 +151,9 @@
                     <select name="major_category" id="majorCategory" class="form-control">
                         <option value="">全部大类</option>
                         {% for category in all_categories %}
-                            <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
-                                {{ category }}
-                            </option>
+                        <option value="{{ category }}" {% if selected_category==category %}selected{% endif %}>
+                            {{ category }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -139,9 +162,9 @@
                     <select name="major_subcategory" id="majorSubcategory" class="form-control">
                         <option value="">全部类别</option>
                         {% for subcategory in all_subcategories %}
-                            <option value="{{ subcategory }}" {% if selected_subcategory == subcategory %}selected{% endif %}>
-                                {{ subcategory }}
-                            </option>
+                        <option value="{{ subcategory }}" {% if selected_subcategory==subcategory %}selected{% endif %}>
+                            {{ subcategory }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -150,58 +173,57 @@
         </div>
         <div class="chart-container-wrapper">
             {% if total_majors == 0 %}
-                <div class="no-data-tip">暂无符合条件的专业数据</div>
+            <div class="no-data-tip">暂无符合条件的专业数据</div>
             {% else %}
-                {% for chart_data in chart_data_list %}
-                    <div class="chart-card">
-                        <h4 class="chart-title" id="chartTitle{{ forloop.counter }}">
-                            {% if selected_category and selected_subcategory %}
-                                {{ selected_category }}—{{ selected_subcategory }} - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
-                            {% elif selected_category %}
-                                {{ selected_category }}—全部类别 - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
-                            {% elif selected_subcategory %}
-                                全部大类—{{ selected_subcategory }} - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
-                            {% else %}
-                                全部大类—全部类别 - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
-                            {% endif %}
-                        </h4>
-                        <canvas class="major-chart" 
-                                data-labels="{{ chart_data.labels|join:','|escapejs }}"
-                                data-values="{{ chart_data.values|join:','|escapejs }}"
-                                data-chart-index="{{ forloop.counter }}">
-                        </canvas>
-                    </div>
-                    {% if not forloop.last %}
-                        <div style="height: 30px;"></div>
+            {% for chart_data in chart_data_list %}
+            <div class="chart-card">
+                <h4 class="chart-title" id="chartTitle{{ forloop.counter }}">
+                    {% if selected_category and selected_subcategory %}
+                    {{ selected_category }}—{{ selected_subcategory }} - 第{{ chart_data.group_num }}组（共{{
+                    chart_data_list|length }}组）
+                    {% elif selected_category %}
+                    {{ selected_category }}—全部类别 - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
+                    {% elif selected_subcategory %}
+                    全部大类—{{ selected_subcategory }} - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
+                    {% else %}
+                    全部大类—全部类别 - 第{{ chart_data.group_num }}组（共{{ chart_data_list|length }}组）
                     {% endif %}
-                {% endfor %}
+                </h4>
+                <canvas class="major-chart" data-labels="{{ chart_data.labels|join:','|escapejs }}"
+                    data-values="{{ chart_data.values|join:','|escapejs }}" data-chart-index="{{ forloop.counter }}">
+                </canvas>
+            </div>
+            {% if not forloop.last %}
+            <div style="height: 30px;"></div>
+            {% endif %}
+            {% endfor %}
             {% endif %}
         </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const majorCategorySelect = document.getElementById('majorCategory');
         const majorSubcategorySelect = document.getElementById('majorSubcategory');
         const charts = document.querySelectorAll('.major-chart');
         const form = document.getElementById('majorForm');
-        
+
         // 存储所有专业类别数据用于联动
         const allSubcategories = Array.from(majorSubcategorySelect.options).map(option => ({
             value: option.value,
             text: option.text,
             selected: option.selected
         }));
-        
+
         // 专业大类变化时自动更新专业类别下拉菜单
-        majorCategorySelect.addEventListener('change', function() {
+        majorCategorySelect.addEventListener('change', function () {
             // 保存当前选中的专业类别
             const currentSubcategory = majorSubcategorySelect.value;
-            
+
             // 清空现有选项（保留"全部类别"）
             majorSubcategorySelect.innerHTML = '<option value="">全部类别</option>';
-            
+
             // 获取所有专业数据（从后端重新获取）
             fetch(`?major_category=${encodeURIComponent(this.value)}`)
                 .then(response => response.text())
@@ -210,7 +232,7 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     const newSubcategorySelect = tempDiv.querySelector('#majorSubcategory');
-                    
+
                     // 复制新的选项到当前页面的下拉菜单
                     Array.from(newSubcategorySelect.options).forEach(option => {
                         if (option.value !== "") { // 跳过"全部类别"，已经手动添加过
@@ -252,16 +274,16 @@
             return `${category}—${subcategory} - 第${groupNum}组（共${totalGroups}组）`;
         }
 
-        charts.forEach(function(canvas) {
+        charts.forEach(function (canvas) {
             const labels = canvas.dataset.labels.split(',');
             const values = canvas.dataset.values.split(',').map(Number);
             const chartIndex = canvas.dataset.chartIndex;
             const groupNum = canvas.closest('.chart-card').querySelector('.chart-title').textContent.match(/第(\d+)组/)[1];
             const totalGroups = document.querySelectorAll('.chart-card').length;
-            
+
             const chartTitleElement = document.getElementById(`chartTitle${chartIndex}`);
             chartTitleElement.textContent = generateChartTitle(groupNum, totalGroups);
-            
+
             const datasets = [{
                 label: '人气值',
                 data: values,
@@ -280,10 +302,10 @@
                 maxBarThickness: 120,
                 minBarLength: 8
             }];
-            
+
             const maxValue = Math.max(...values);
             const yAxisMax = maxValue > 0 ? maxValue * 1.15 : 10;
-            
+
             const ctx = canvas.getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
@@ -301,8 +323,8 @@
                         y: {
                             beginAtZero: true,
                             max: yAxisMax,
-                            title: { 
-                                display: true, 
+                            title: {
+                                display: true,
                                 text: '人气值',
                                 font: { size: 20, weight: '600' },
                                 padding: { top: 15 }
@@ -318,21 +340,21 @@
                             }
                         },
                         x: {
-                            title: { 
-                                display: true, 
+                            title: {
+                                display: true,
                                 text: '专业名称',
                                 font: { size: 20, weight: '600' },
                                 padding: { bottom: 15 }
                             },
                             ticks: {
                                 padding: 20,
-                                font: { 
+                                font: {
                                     size: 18,
                                     weight: '600',
                                     family: 'Microsoft YaHei, sans-serif'
                                 },
                                 color: '#444',
-                                callback: function(value) {
+                                callback: function (value) {
                                     const label = this.getLabelForValue(value);
                                     return label.length > 14 ? label.substring(0, 14) + '...' : label;
                                 }
@@ -350,10 +372,10 @@
                             titleFont: { size: 18, weight: '600' },
                             bodyFont: { size: 16, weight: '500' },
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     return `人气值：${context.raw}`;
                                 },
-                                title: function(context) {
+                                title: function (context) {
                                     return context[0].label;
                                 }
                             }
@@ -365,7 +387,7 @@
                             font: { size: 18, weight: '600', lineHeight: 1.2 },
                             padding: { top: 10 },
                             clamp: true,
-                            formatter: function(value) {
+                            formatter: function (value) {
                                 return value.toString().length > 6 ? value.toLocaleString() : value;
                             }
                         }
