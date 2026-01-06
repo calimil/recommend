@@ -1,96 +1,126 @@
-{# 继承 base.html #}
+<!--#林洋洋：优化学校详情页面，改进样式和用户体验-->
 {% extends "base.html" %}
-
-{# 替换title #}
-{% block title %}
-{{ title }}
-{% endblock %}
-
-
-{# 替换内容 #}
+{% block title %}学校详情{% endblock %}
 {% block content %}
-<div class="container-fluid">
-	<div class="row-fluid">
-		<div class="col-md-8">
-			<div class="tabbable tabs-left" id="tabs-418843">
-				<ul class="nav nav-tabs">
-					<li>
-						<a href="#panel-984690" data-toggle="tab">文科</a>
-					</li>
-					<li class="active">
-						<a href="#panel-878545" data-toggle="tab">理科</a>
-					</li>
-				</ul>
-				<div class="tab-content">
-					<div class="tab-pane" id="panel-984690">
-                        {#      文科信息              #}
-                        <div id="select_message_art">
-                            <form class="form-inline" action="" method="post" novalidate>
-                                {% csrf_token %}
-                                {% for foo in one_school_form %}
+<div class="container-fluid" style="margin-top: 30px;">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">专业录取信息</h4>
+                </div>
+                <div class="panel-body">
+                    <ul class="nav nav-tabs" id="myTab">
+                        <li>
+                            <a href="#art" data-toggle="tab">文科</a>
+                        </li>
+                        <li class="active">
+                            <a href="#science" data-toggle="tab">理科</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane" id="art">
+                            <div id="select_message_art">
+                                <form class="form-inline" action="" method="post" novalidate>
+                                    {% csrf_token %}
+                                    {% for foo in one_school_form %}
                                     <div class="form-group">
                                         {{ foo }}
                                     </div>
-                                {% endfor %}
-                                <button type="submit" class="btn btn-primary">查询</button>
-                            </form>
+                                    {% endfor %}
+                                    <button type="submit" class="btn btn-primary">查询</button>
+                                </form>
+                            </div>
+                            {% if art_message %}
+                            <table class="table table-bordered table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th width="25%">专业</th>
+                                        <th>年份</th>
+                                        <th>最高分</th>
+                                        <th>平均分</th>
+                                        <th>最低分</th>
+                                        <th>最低排名</th>
+                                        <th>批次</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for school in art_message %}
+                                    <tr>
+                                        <td width="25%">{{ school.profession_name }}</td>
+                                        <td>{{ school.year }}</td>
+                                        <td>{{ school.top_score }}</td>
+                                        <td>{{ school.avg_score }}</td>
+                                        <td>{{ school.lowest_score}}</td>
+                                        <td>{{ school.lowest_rank }}</td>
+                                        <td>{{ school.epoch }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% endif %}
                         </div>
-                        <table class="table table-bordered table-hover table-striped ">
-                            <tr><th width="25%">专业</th><th>年份</th><th>最高分</th><th>平均分</th><th>最低分</th><th>最低排名</th><th>批次</th>
-                            {% for school in art_message %}
-                            <tr>
-                                <td width="25%">{{ school.profession_name }}</td>
-                                <td>{{ school.year }}</td>
-                                <td>{{ school.top_score }}</td>
-                                <td>{{ school.avg_score }}</td>
-                                <td>{{ school.lowest_score}}</td>
-                                <td>{{ school.lowest_rank }}</td>
-                                <td>{{ school.epoch }}</td>
-
-                            </tr>
-                            {% endfor %}
-                        </table>
-					</div>
-					<div class="tab-pane active" id="panel-878545">
-                        {#      理科信息              #}
-                        <div id="select_message_science">
-                            <form class="form-inline" action="" method="post" novalidate>
-                                {% csrf_token %}
-                                {% for foo in one_school_form %}
+                        <div class="tab-pane active" id="science">
+                            <div id="select_message_science">
+                                <form class="form-inline" action="" method="post" novalidate>
+                                    {% csrf_token %}
+                                    {% for foo in one_school_form %}
                                     <div class="form-group">
                                         {{ foo }}
                                     </div>
-                                {% endfor %}
-                                <button type="submit" class="btn btn-primary">提交</button>
-                            </form>
+                                    {% endfor %}
+                                    <button type="submit" class="btn btn-primary">查询</button>
+                                </form>
+                            </div>
+                            {% if science_message %}
+                            <table class="table table-bordered table-hover table-striped">
+                                <thead>
+                                    <tr>
+                                        <th width="25%">专业</th>
+                                        <th>年份</th>
+                                        <th>最高分</th>
+                                        <th>平均分</th>
+                                        <th>最低分</th>
+                                        <th>最低排名</th>
+                                        <th>批次</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for school in science_message %}
+                                    <tr>
+                                        <td width="25%">{{ school.profession_name }}</td>
+                                        <td>{{ school.year }}</td>
+                                        <td>{{ school.top_score }}</td>
+                                        <td>{{ school.avg_score }}</td>
+                                        <td>{{ school.lowest_score}}</td>
+                                        <td>{{ school.lowest_rank }}</td>
+                                        <td>{{ school.epoch }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% endif %}
                         </div>
-						<table class="table table-bordered table-hover table-striped ">
-                            <tr><th width="25%">专业</th><th>年份</th><th>最高分</th><th>平均分</th><th>最低分</th><th>最低排名</th><th>批次</th>
-                            {% for school in science_message %}
-                            <tr>
-                                <td width="25%">{{ school.profession_name }}</td>
-                                <td>{{ school.year }}</td>
-                                <td>{{ school.top_score }}</td>
-                                <td>{{ school.avg_score }}</td>
-                                <td>{{ school.lowest_score}}</td>
-                                <td>{{ school.lowest_rank }}</td>
-                                <td>{{ school.epoch }}</td>
-
-                            </tr>
-                            {% endfor %}
-                        </table>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-4">
-			<ul>
-				{% for recommend_school in recommend_school_list %}
-                    <a href="../{{ recommend_school }}"><li>{{ recommend_school }}</li></a>
-				{% endfor %}
-
-			</ul>
-		</div>
-	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">推荐学校</h4>
+                </div>
+                <div class="panel-body">
+                    <ul class="list-group">
+                        {% for recommend_school in recommend_school_list %}
+                        <li class="list-group-item">
+                            <a href="../{{ recommend_school }}">{{ recommend_school }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

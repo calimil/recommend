@@ -57,3 +57,22 @@ class school_score(models.Model):
         ordering = ["id"]
         verbose_name = "学校分数"
         verbose_name_plural = "学校分数"
+
+
+"""董静编写"""
+# 历年录取数据模型
+class AdmissionData(models.Model):
+    """历年录取数据模型"""
+    school_name = models.CharField(max_length=256, verbose_name="学校名称")
+    profession_name = models.CharField(max_length=256, verbose_name="专业名称")
+    student_type = models.CharField(max_length=32, verbose_name="科类")  # 文科/理科
+    year = models.IntegerField(verbose_name="年份")
+    highest_score = models.IntegerField(verbose_name="最高分")
+    avg_score = models.IntegerField(verbose_name="平均分")
+    lowest_score = models.IntegerField(verbose_name="最低分")
+    lowest_rank = models.IntegerField(verbose_name="最低排名")
+    epoch = models.CharField(max_length=32, verbose_name="批次")
+
+    class Meta:
+        verbose_name = "录取数据"
+        verbose_name_plural = "录取数据"

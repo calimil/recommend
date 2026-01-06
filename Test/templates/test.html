@@ -1,37 +1,87 @@
-{# 继承 base.html #}
+<!--#林洋洋：重构test页面，实现所有问题在同一页面显示-->
 {% extends "base.html" %}
-
-{# 替换title #}
-{% block title %}
-{{ title }}
-{% endblock %}
-
-
-{# 替换内容 #}
+{% block title %}性格测试{% endblock %}
 {% block content %}
-    <div class="container">
-    <div class="col-md-3 col-md-offset-2">共48题</div>
-        <div class="col-md-4 col-md-offset-4">
-            <div class="row" >
-                <div class="col-md-10 col-md-offset-0 add-row"
-                style="background-color: #dedef8;box-shadow:
-                inset 1px -1px 1px #444, inset -1px 1px 1px #444;">
-                <p>{{ question.question }}</p>
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h2 class="text-center">性格测试（共48题）</h2>
+            {% if error %}
+            <div class="alert alert-warning" role="alert">
+                <strong>提示：</strong>{{ error }}
+            </div>
+            {% endif %}
+            <form method="POST" action="{% url 'test_all' %}" id="testForm">
+                {% csrf_token %}
+                <div class="panel-group" id="accordion">
+                    {% for item in question_data %}
+                    <div class="panel panel-default {% if unanswered_indices and item.index in unanswered_indices %}panel-unanswered{% endif %}" id="question-{{ item.index }}">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                {{ item.question.question }}
+                                {% if unanswered_indices and item.index in unanswered_indices %}
+                                <span class="label label-warning pull-right">未回答</span>
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default question-option {% if item.answer == '0' %}active{% endif %}" data-question="{{ item.index }}">
+                                    <input type="radio" name="answer_{{ item.index }}" value="0" autocomplete="off" {% if item.answer == '0' %}checked{% endif %}> 否
+                                </label>
+                                <label class="btn btn-default question-option {% if item.answer == '1' %}active{% endif %}" data-question="{{ item.index }}">
+                                    <input type="radio" name="answer_{{ item.index }}" value="1" autocomplete="off" {% if item.answer == '1' %}checked{% endif %}> 是
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
-            </div>
-                     <br/>
-            <div class="row" >
-            <a href="{% url 'test' num answer_yes%}">
-            <button type="button" class="btn btn-primary btn-lg">
-            <span class="glyphicon glyphicon-pencil"></span> 是
-            </button>
-            </a>
-            <a href="{% url 'test' num answer_no%}">
-            <button type="button" class="btn btn-primary btn-lg">
-            <span class="glyphicon glyphicon-pencil"></span> 否
-            </button>
-            </a>
-            </div>
+                <div class="row" style="margin-top: 30px;">
+                    <div class="col-md-6 col-md-offset-3">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            <span class="glyphicon glyphicon-ok"></span> 提交答案
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+<style>
+    .question-option { width: 100px; margin-right: 10px; }
+    .question-option.active { background-color: #337ab7; color: white; }
+    .panel { margin-bottom: 10px; transition: all 0.3s ease; }
+    .panel-heading { padding: 10px 15px; }
+    .panel-body { padding: 10px 15px; }
+    .badge { background-color: #337ab7; }
+    .panel-unanswered { border: 2px solid #f0ad4e; box-shadow: 0 0 10px rgba(240, 173, 78, 0.3); }
+    .panel-unanswered .panel-heading { background-color: #fcf8e3; }
+    .label-warning { background-color: #f0ad4e; }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionOptions = document.querySelectorAll('.question-option');
+        questionOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const questionIndex = this.getAttribute('data-question');
+                const options = document.querySelectorAll(`.question-option[data-question="${questionIndex}"]`);
+                options.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                const panel = this.closest('.panel');
+                if (panel) {
+                    panel.classList.remove('panel-unanswered');
+                    const label = panel.querySelector('.label-warning');
+                    if (label) { label.remove(); }
+                }
+            });
+        });
+        {% if unanswered_indices and unanswered_indices|length > 0 %}
+        const firstUnanswered = document.getElementById('question-{{ unanswered_indices.0 }}');
+        if (firstUnanswered) {
+            firstUnanswered.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        {% endif %}
+    });
+</script>
 {% endblock %}
